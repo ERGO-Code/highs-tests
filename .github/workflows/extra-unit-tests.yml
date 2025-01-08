@@ -37,6 +37,12 @@ jobs:
         run: |
           ls -a
           pwd
+        
+      - name: workspace dir
+        working-directory: ${{runner.workspace}} 
+        run: |
+          ls -a
+          pwd
 
       # - name: Create Build Environment
       #   run: cmake -E make_directory ${{runner.workspace}}/build
