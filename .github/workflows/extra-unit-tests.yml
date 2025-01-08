@@ -45,11 +45,14 @@ jobs:
           pwd
 
       - name: Symlink extra tests to HiGHS
-        working-directory: ${{runner.workspace}} 
+        working-directory: ${{runner.workspace}}/highs-tests/HiGHS/check
         run: |
           ls -a
           pwd 
-          ln -s ${{runner.workspace}}/highs-tests/highs-unit-tests ${{runner.workspace}}/highs-tests/HiGHS/check/highs-unit-tests/
+          ln -s ${{runner.workspace}}/highs-tests/highs-unit-tests highs-unit-tests/
+          cd highs-unit-tests
+          ls -a
+          pwd
 
 
       # - name: Create Build Environment
