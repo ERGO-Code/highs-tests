@@ -17,14 +17,14 @@ jobs:
         with:
           repository: ERGO-Code/HiGHS
           ref: latest
-          path: ${{runner.workspace}}/HiGHS
+          path: HiGHS
 
       - name: Checkout highs-unit-tests repo
         uses: actions/checkout@v4
         with:
           repository: galabovaa/highs-unit-tests
           ref: main
-          path: ${{runner.workspace}}/highs-unit-tests
+          path: highs-unit-tests
 
       - name: HiGHS dir 
         working-directory: HiGHS
@@ -45,10 +45,11 @@ jobs:
           pwd
 
       - name: Symlink extra tests to HiGHS
+        working-directory: ${{runner.workspace}} 
         run: |
           ls -a
           pwd 
-          ln -s ${{runner.workspace}}/highs-unit-tests ${{runner.workspace}}/HiGHS/check/highs-unit-tests/
+          ln -s ${{runner.workspace}}/highs-tests/highs-unit-tests ${{runner.workspace}}/highs-tests/HiGHS/check/highs-unit-tests/
 
 
       # - name: Create Build Environment
