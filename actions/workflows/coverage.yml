@@ -1,0 +1,19 @@
+#todo
+# test 
+
+name: actions-coverage
+
+on: [push, pull_request]
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run ls
+        run: ls -a 

@@ -1,0 +1,29 @@
+name: extra-tests
+
+on: [push, pull_request]
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout HiGHS repo
+        uses: actions/checkout@v4
+        with:
+          repository: ERGO-Code/HiGHS
+          path: HiGHS
+
+      - name: Checkout highs-unit-tests repo
+        uses: actions/checkout@v4
+        with:
+          repository: galabovaa/highs-unit-tests
+          path: highs-unit-tests
+
+      - name: ls HiGHS
+        working-directory: HiGHS
+        run: ls -a
