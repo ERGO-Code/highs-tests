@@ -49,7 +49,7 @@ jobs:
         run: |
           ls -a
           pwd 
-          ln -s ${{runner.workspace}}/highs-tests/highs-unit-tests highs-unit-tests/
+          mv ${{runner.workspace}}/highs-tests/highs-unit-tests ./highs-unit-tests
           cd highs-unit-tests
           ls -a
           pwd
