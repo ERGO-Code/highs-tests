@@ -26,13 +26,13 @@ jobs:
           ref: main
           path: highs-unit-tests
 
-      - name: Symlink extra tests to HiGHS
+      - name: HiGHS dir 
         working-directory: HiGHS
         run: |
           ls -a
           pwd
 
-      - name: Symlink extra tests 
+      - name: extra tests dir
         working-directory: highs-unit-tests
         run: |
           ls -a
@@ -43,6 +43,12 @@ jobs:
         run: |
           ls -a
           pwd
+
+      - name: Symlink extra tests to HiGHS
+        run: |
+          ls -a
+          pwd
+
 
       # - name: Create Build Environment
       #   run: cmake -E make_directory ${{runner.workspace}}/build
