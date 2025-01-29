@@ -30,3 +30,8 @@
 *.exe
 *.out
 *.app
+
+# personal access token, not commited
+dev.env 
+
+.vscode
