@@ -55,7 +55,7 @@ jobs:
         shell: bash
         run: |
           cmake ${{runner.workspace}}/highs-tests/CMakeHighsFindPackage-master \
-            -DHIGHS_DIR=${{runner.workspace}}/install-highs-master \
+            -DHIGHS_DIR=${{runner.workspace}}/install-highs-master/lib/cmake/highs \
             -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install-find-highs-master
           cmake --build . --parallel 
           cmake --install .
