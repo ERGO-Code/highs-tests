@@ -1,4 +1,4 @@
-name: cmake-find-highs
+name: cmake-fetch-content
 
 on: [push, pull_request]
 
