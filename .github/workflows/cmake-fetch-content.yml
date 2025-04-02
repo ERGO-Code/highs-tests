@@ -1,0 +1,43 @@
+name: cmake-fetch-content
+
+on: [push, pull_request]
+
+jobs:
+  master:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
+        branch: [master, latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout CMakeHighsFetchContent
+        uses: actions/checkout@v4
+        with:
+          repository: galabovaa/CMakeHighsFetchContent
+          ref: main
+          path: CMakeHighsFetchContent-main-${{matrix.branch}}
+
+      - name: Create build dir
+        run: |
+          cmake -E make_directory ${{runner.workspace}}/build-fetch-content-${{matrix.branch}}
+
+      - name: Build CMakeFindHighsPackage
+        working-directory: ${{runner.workspace}}/build-fetch-content-${{matrix.branch}}
+        shell: bash
+        run: |
+          cmake ${{runner.workspace}}/highs-tests/CMakeHighsFetchContent-main-${{matrix.branch}} \
+            -DBRANCH=${{matrix.branch}}
+          cmake --build . --parallel 
+
+      - name: Test 
+        working-directory: ${{runner.workspace}}/build-fetch-content-${{matrix.branch}}
+        shell: bash
+        run: |
+          ./main
+
+      # todo, not implemented yet in CMakeHighsFetchContent
+      # - name: Test install
