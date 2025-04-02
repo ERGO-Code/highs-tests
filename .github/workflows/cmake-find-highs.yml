@@ -67,7 +67,7 @@ jobs:
         working-directory: ${{runner.workspace}}/build-find-highs-${{matrix.branch}}
         shell: bash
         run: |
-          ./bin/main
+          ./main
 
       # does not find highs lib, needs more cmake code in CMakeFindHighsPackage
       # - name: Test install
