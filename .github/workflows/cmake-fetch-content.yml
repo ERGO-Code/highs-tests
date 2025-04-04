@@ -41,3 +41,5 @@ jobs:
 
       # todo, not implemented yet in CMakeHighsFetchContent
       # - name: Test install
+
+      # trigger test
