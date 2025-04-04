@@ -9,7 +9,7 @@ jobs:
       matrix:
         # os: [ubuntu-latest, windows-latest]
         os: [ubuntu-latest]
-        branch: [master, latest]
+        branch: [master, latest, cmake]
 
     steps:
       - uses: actions/checkout@v4
