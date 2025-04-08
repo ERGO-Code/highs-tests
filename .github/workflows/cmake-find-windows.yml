@@ -71,4 +71,4 @@ jobs:
         working-directory: ${{runner.workspace}}\\install-find-highs-${{matrix.branch}}
         shell: bash
         run: |
-          .\\bin\\Release\\main.exe
+          .\\bin\\main.exe
