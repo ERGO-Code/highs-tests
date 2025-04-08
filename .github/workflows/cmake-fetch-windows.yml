@@ -3,7 +3,7 @@ name: cmake-fetch-windows
 on: [push, pull_request]
 
 jobs:
-  master:
+  fetch_win:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

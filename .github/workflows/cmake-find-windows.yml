@@ -3,7 +3,7 @@ name: cmake-find-windows
 on: [push, pull_request]
 
 jobs:
-  windows:
+  find_i_win:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

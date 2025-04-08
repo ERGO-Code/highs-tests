@@ -3,7 +3,7 @@ name: cmake-fetch-linux
 on: [push, pull_request]
 
 jobs:
-  master:
+  fetch_ubuntu:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

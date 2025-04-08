@@ -3,7 +3,7 @@ name: cmake-fetch-macos
 on: [push, pull_request]
 
 jobs:
-  master:
+  fetch_macos:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

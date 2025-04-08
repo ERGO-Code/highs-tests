@@ -3,7 +3,7 @@ name: cmake-find-linux
 on: [push, pull_request]
 
 jobs:
-  ubuntu:
+  find_i_ubuntu:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
