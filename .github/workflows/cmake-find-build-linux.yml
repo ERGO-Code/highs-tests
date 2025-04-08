@@ -1,0 +1,70 @@
+name: cmake-find-build-linux
+
+on: [push, pull_request]
+
+jobs:
+  ubuntu:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        branch: [master, latest, cmake]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout HiGHS repo
+        uses: actions/checkout@v4
+        with:
+          repository: ERGO-Code/HiGHS
+          ref: ${{matrix.branch}}
+          path: HiGHS-${{matrix.branch}}-b
+
+      - name: Checkout CMakeHighsFindPackage
+        uses: actions/checkout@v4
+        with:
+          repository: galabovaa/CMakeHighsFindPackage
+          ref: master
+          path: CMakeHighsFindPackage-master-${{matrix.branch}}-b
+
+      - name: Create build and install dirs
+        run: |
+          cmake -E make_directory ${{runner.workspace}}/build-highs-${{matrix.branch}}-b
+          cmake -E make_directory ${{runner.workspace}}/build-find-build-${{matrix.branch}}
+          cmake -E make_directory ${{runner.workspace}}/install-find-build-${{matrix.branch}}
+
+      - name: Configure CMake HiGHS
+        shell: bash
+        working-directory: ${{runner.workspace}}/build-highs-${{matrix.branch}}-b
+        run: 
+          cmake ${{runner.workspace}}/highs-tests/HiGHS-${{matrix.branch}}-b
+
+      - name: Build, ctest and install HiGHS
+        working-directory: ${{runner.workspace}}/build-highs-${{matrix.branch}}-b
+        shell: bash
+        run: |
+          cmake --build . --parallel 
+          ctest
+
+      - name: Build CMakeFindHighsPackage
+        working-directory: ${{runner.workspace}}/build-find-build-${{matrix.branch}}
+        shell: bash
+        run: |
+          cmake ${{runner.workspace}}/highs-tests/CMakeHighsFindPackage-master-${{matrix.branch}}-b \
+            -DHIGHS_DIR=${{runner.workspace}}/build-highs-${{matrix.branch}}-b \
+            -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install-find-build-${{matrix.branch}}
+          cmake --build . --parallel 
+          cmake --install .
+
+      - name: Test build
+        working-directory: ${{runner.workspace}}/build-find-build-${{matrix.branch}}
+        shell: bash
+        run: |
+          ./main
+
+      - name: Test install
+        working-directory: ${{runner.workspace}}/install-find-build-${{matrix.branch}}
+        shell: bash
+        run: |
+          LD_LIBRARY_PATH=${{runner.workspace}}/build-highs-${{matrix.branch}}-b/lib ./bin/main
