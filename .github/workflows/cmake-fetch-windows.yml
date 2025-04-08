@@ -40,12 +40,11 @@ jobs:
 
       - name: Test 
         working-directory: ${{runner.workspace}}\\build-fetch-${{matrix.branch}}
-        shell: bash
         run: |
-          ./main
+          .\\Release\\main.exe
 
       - name: Test install
         working-directory: ${{runner.workspace}}\\install-fetch-${{matrix.branch}}
         shell: bash
         run: |
-          ./bin/main
+          .\\bin\\main.exe
