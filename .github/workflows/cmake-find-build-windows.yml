@@ -49,8 +49,8 @@ jobs:
         working-directory: ${{runner.workspace}}\\build-find-build-${{matrix.branch}}
         run: >-
           cmake ${{runner.workspace}}\\highs-tests\\CMakeHighsFindPackage-master-${{matrix.branch}}-b
-            -DHIGHS_DIR=${{runner.workspace}}\\build-highs-${{matrix.branch}}-b 
-            -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}\\install-find-build-${{matrix.branch}}
+          -DHIGHS_DIR=${{runner.workspace}}\\build-highs-${{matrix.branch}}-b 
+          -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}\\install-find-build-${{matrix.branch}}
 
       - name: Build and install CMakeFindHighsPackage
         working-directory: ${{runner.workspace}}\\build-find-build-${{matrix.branch}}
@@ -63,6 +63,8 @@ jobs:
         shell: bash
         run: |
           .\\Release\\main.exe
+
+        # $env:PATH = 'C:/Users/galab/installs/highs/bin/;' + $env:PATH
 
       - name: Test install
         working-directory: ${{runner.workspace}}\\install-find-build-${{matrix.branch}}
