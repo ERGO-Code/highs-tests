@@ -60,8 +60,8 @@ jobs:
 
       - name: Test build
         working-directory: ${{runner.workspace}}\\build-find-build-${{matrix.branch}}
-        shell: bash
         run: |
+          $env:PATH = '${{runner.workspace}}/build-highs-${{matrix.branch}}-b/bin/Release;' + $env:PATH
           .\\Release\\main.exe
 
       - name: Test install
