@@ -65,10 +65,10 @@ jobs:
         working-directory: ${{runner.workspace}}\\build-find-highs-${{matrix.branch}}
         shell: bash
         run: |
-          ./main.exe
+          .\\Release\\main.exe
 
       - name: Test install
         working-directory: ${{runner.workspace}}\\install-find-highs-${{matrix.branch}}
         shell: bash
         run: |
-          ./bin/Release/main.exe
+          .\\bin\\Release\\main.exe
