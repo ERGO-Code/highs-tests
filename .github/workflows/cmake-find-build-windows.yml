@@ -3,7 +3,7 @@ name: cmake-find-build-windows
 on: [push, pull_request]
 
 jobs:
-  ubuntu:
+  windows:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -42,8 +42,8 @@ jobs:
       - name: Build, ctest and install HiGHS
         working-directory: ${{runner.workspace}}\\build-highs-${{matrix.branch}}-b
         run: |
-          cmake --build . --parallel 
-          ctest
+          cmake --build . --parallel --config Release
+          ctest -C Release
 
       - name: Configure CMakeFindHighsPackage
         working-directory: ${{runner.workspace}}\\build-find-build-${{matrix.branch}}
