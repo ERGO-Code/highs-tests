@@ -37,9 +37,8 @@ jobs:
 
       - name: Configure CMake HiGHS
         working-directory: ${{runner.workspace}}\\build-highs-${{matrix.branch}}
-        shell: bash
-        run: |
-          cmake ${{runner.workspace}}\\highs-tests\\HiGHS-${{matrix.branch}} \
+        run: >
+          cmake ${{runner.workspace}}\\highs-tests\\HiGHS-${{matrix.branch}} 
             -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}\\install-highs-${{matrix.branch}}
 
       - name: Build, ctest and install HiGHS
@@ -49,13 +48,16 @@ jobs:
           ctest -C Release
           cmake --install .
 
-      - name: Build CMakeFindHighsPackage
+      - name: Configure CMakeFindHighsPackage
         working-directory: ${{runner.workspace}}\\build-find-highs-${{matrix.branch}}
-        shell: bash
+        run: >
+          cmake ${{runner.workspace}}\\highs-tests\\CMakeHighsFindPackage-master-${{matrix.branch}} 
+            -DHIGHS_DIR=${{runner.workspace}}\\install-highs-${{matrix.branch}}\\lib\\cmake\\highs 
+            -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}\\install-find-highs-${{matrix.branch}}
+
+      - name: Build and install CMakeFindHighsPackage
+        working-directory: ${{runner.workspace}}\\build-find-highs-${{matrix.branch}}
         run: |
-          cmake ${{runner.workspace}}\\highs-tests\\CMakeHighsFindPackage-master-${{matrix.branch}} \
-            -DHIGHS_DIR=${{runner.workspace}}/install-highs-${{matrix.branch}}/lib/cmake/highs \
-            -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install-find-highs-${{matrix.branch}}
           cmake --build . --parallel  --config Release
           cmake --install .
 
