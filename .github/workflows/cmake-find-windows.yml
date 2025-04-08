@@ -50,10 +50,10 @@ jobs:
 
       - name: Configure CMakeFindHighsPackage
         working-directory: ${{runner.workspace}}\\build-find-highs-${{matrix.branch}}
-        run: >
+        run: >-
           cmake ${{runner.workspace}}\\highs-tests\\CMakeHighsFindPackage-master-${{matrix.branch}} 
-            -DHIGHS_DIR=${{runner.workspace}}\\install-highs-${{matrix.branch}}\\lib\\cmake\\highs 
-            -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}\\install-find-highs-${{matrix.branch}}
+          -DHIGHS_DIR=${{runner.workspace}}\\install-highs-${{matrix.branch}}\\lib\\cmake\\highs 
+          -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}\\install-find-highs-${{matrix.branch}}
 
       - name: Build and install CMakeFindHighsPackage
         working-directory: ${{runner.workspace}}\\build-find-highs-${{matrix.branch}}
