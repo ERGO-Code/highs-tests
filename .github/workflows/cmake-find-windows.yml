@@ -39,7 +39,7 @@ jobs:
         working-directory: ${{runner.workspace}}\\build-highs-${{matrix.branch}}
         shell: bash
         run: |
-          cmake ${{runner.workspace}}/highs-tests/HiGHS-${{matrix.branch}} \
+          cmake ${{runner.workspace}}\\highs-tests\\HiGHS-${{matrix.branch}} \
             -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install-highs-${{matrix.branch}}
 
       - name: Build, ctest and install HiGHS
