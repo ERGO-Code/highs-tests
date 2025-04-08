@@ -3,7 +3,7 @@ name: cmake-find-macos
 on: [push, pull_request]
 
 jobs:
-  ubuntu:
+  macos:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

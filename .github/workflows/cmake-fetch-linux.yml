@@ -31,7 +31,7 @@ jobs:
         run: |
           cmake ${{runner.workspace}}/highs-tests/CMakeHighsFetchContent-main-${{matrix.branch}} \
             -DBRANCH=${{matrix.branch}} \
-            -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install-fetch-highs-${{matrix.branch}}
+            -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install-fetch-${{matrix.branch}}
           cmake --build . --parallel 
 
       - name: Test 
@@ -41,4 +41,7 @@ jobs:
           ./main
 
       - name: Test install
-      # trigger test
+        working-directory: ${{runner.workspace}}/install-fetch-${{matrix.branch}}
+        shell: bash
+        run: |
+          ./bin/main
