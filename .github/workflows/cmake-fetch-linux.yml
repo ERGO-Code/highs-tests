@@ -33,6 +33,7 @@ jobs:
             -DBRANCH=${{matrix.branch}} \
             -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install-fetch-${{matrix.branch}}
           cmake --build . --parallel 
+          cmake --install .
 
       - name: Test 
         working-directory: ${{runner.workspace}}/build-fetch-${{matrix.branch}}
