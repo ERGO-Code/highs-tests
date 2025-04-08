@@ -29,19 +29,17 @@ jobs:
           path: CMakeHighsFindPackage-master-${{matrix.branch}}
 
       - name: Create build and install dirs
-        shell: bash
         run: |
-          cmake -E make_directory ${{runner.workspace}}/build-highs-${{matrix.branch}}
-          cmake -E make_directory ${{runner.workspace}}/install-highs-${{matrix.branch}}
-          cmake -E make_directory ${{runner.workspace}}/build-find-highs-${{matrix.branch}}
-          cmake -E make_directory ${{runner.workspace}}/install-find-highs-${{matrix.branch}}
+          mkdir ${{runner.workspace}}\\build-highs-${{matrix.branch}}
+          mkdir ${{runner.workspace}}\\install-highs-${{matrix.branch}}
+          mkdir ${{runner.workspace}}\\build-find-highs-${{matrix.branch}}
+          mkdir ${{runner.workspace}}\\install-find-highs-${{matrix.branch}}
 
       - name: Configure CMake HiGHS
-        shell: bash
-        working-directory: ${{runner.workspace}}/build-highs-${{matrix.branch}}
+        working-directory: ${{runner.workspace}}\\build-highs-${{matrix.branch}}
         run: |
-          cmake ${{runner.workspace}}/highs-tests/HiGHS-${{matrix.branch}} \
-            -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install-highs-${{matrix.branch}}
+          cmake ${{runner.workspace}}\\highs-tests\\HiGHS-${{matrix.branch}} \
+            -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}\\install-highs-${{matrix.branch}}
 
       - name: Build, ctest and install HiGHS
         working-directory: ${{runner.workspace}}/build-highs-${{matrix.branch}}
