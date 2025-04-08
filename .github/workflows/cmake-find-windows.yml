@@ -63,7 +63,7 @@ jobs:
 
       - name: Test build
         working-directory: ${{runner.workspace}}\\build-find-highs-${{matrix.branch}}
-        shell: bash
+        shell: pwsh
         run: |
           $env:PATH = '${{runner.workspace}}/install-highs-${{matrix.branch}}/bin/Release;' + $env:PATH
           echo $Env:PATH
@@ -71,7 +71,7 @@ jobs:
 
       - name: Test install
         working-directory: ${{runner.workspace}}\\install-find-highs-${{matrix.branch}}
-        shell: bash
+        shell: pwsh
         run: |
           $env:PATH = '${{runner.workspace}}/install-highs-${{matrix.branch}}/bin/Release;' + $env:PATH
           echo $Env:PATH
