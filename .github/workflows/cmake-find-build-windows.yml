@@ -64,8 +64,6 @@ jobs:
         run: |
           .\\Release\\main.exe
 
-        # $env:PATH = 'C:/Users/galab/installs/highs/bin/;' + $env:PATH
-
       - name: Test install
         working-directory: ${{runner.workspace}}\\install-find-build-${{matrix.branch}}
         shell: bash
