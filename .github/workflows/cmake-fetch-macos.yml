@@ -1,4 +1,4 @@
-name: cmake-fetch-linux
+name: cmake-fetch-macos
 
 on: [push, pull_request]
 
@@ -7,7 +7,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [macos-latest]
         branch: [master, latest, cmake]
 
     steps:

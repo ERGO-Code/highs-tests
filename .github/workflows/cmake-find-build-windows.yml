@@ -62,10 +62,12 @@ jobs:
         working-directory: ${{runner.workspace}}\\build-find-build-${{matrix.branch}}
         run: |
           $env:PATH = '${{runner.workspace}}/build-highs-${{matrix.branch}}-b/bin/Release;' + $env:PATH
+          echo $Env:PATH
           .\\Release\\main.exe
 
       - name: Test install
         working-directory: ${{runner.workspace}}\\install-find-build-${{matrix.branch}}
-        shell: bash
         run: |
+          $env:PATH = '${{runner.workspace}}/build-highs-${{matrix.branch}}-b/bin/Release;' + $env:PATH
+          echo $Env:PATH
           .\\bin\\main.exe
