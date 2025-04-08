@@ -6,6 +6,7 @@ jobs:
   master:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [windows-latest]
         branch: [master, latest, cmake]
@@ -34,7 +35,7 @@ jobs:
       - name: Build CMakeFindHighsPackage
         working-directory: ${{runner.workspace}}\\build-fetch-${{matrix.branch}}
         run: |
-          cmake --build . --parallel 
+          cmake --build . --parallel --config Release
           cmake --install .
 
       - name: Test 
