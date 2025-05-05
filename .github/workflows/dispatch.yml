@@ -1,0 +1,27 @@
+name: Target Workflow
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [Integration-with-Automation]
+  push:
+    branches:
+      - '*'
+run-name: ${{ github.actor }} is testing out GitHub Actions  🚀
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Run a one-line script
+        run: echo Hello, world!
+
+      - name: Run a multi-line script
+        run: |
+          echo ${{ github.actor }} Hello !
+          echo test, and deploy your project.
