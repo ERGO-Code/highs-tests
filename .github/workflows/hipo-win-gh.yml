@@ -24,7 +24,10 @@ jobs:
 
       # todo: add overlay
       - name: Install METIS
-        run: vcpkg install metis
+        run: |
+          vcpkg install metis gklib \
+          --overlay-ports=$env:GITHUB_WORKSPACE\ports\metis 
+          --overlay-ports=$env:GITHUB_WORKSPACE\ports\gklib
 
         # run: ls C:/vcpkg/packages/metis_x64-windows/
         # run: ls C:/vcpkg/packages/metis_x64-windows/lib
@@ -32,7 +35,7 @@ jobs:
         # run: ls C:/vcpkg/packages/gklib_x64-windows/share/gklib
 
       - name: Install OpenBLAS
-        run: vcpkg install openblas
+        run: vcpkg install openblas[threads]
 
       - name: Create build dir
         run: cmake -E make_directory ${{runner.workspace}}/build
