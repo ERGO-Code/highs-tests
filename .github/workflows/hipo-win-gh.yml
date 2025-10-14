@@ -25,9 +25,9 @@ jobs:
       # todo: add overlay
       - name: Install METIS
         run: |
-          vcpkg install metis gklib \
-          --overlay-ports=$env:GITHUB_WORKSPACE\ports\metis 
-          --overlay-ports=$env:GITHUB_WORKSPACE\ports\gklib
+          vcpkg install metis gklib `
+          --overlay-ports="$env:GITHUB_WORKSPACE/ports/metis" `
+          --overlay-ports="$env:GITHUB_WORKSPACE/ports/gklib"
 
         # run: ls C:/vcpkg/packages/metis_x64-windows/
         # run: ls C:/vcpkg/packages/metis_x64-windows/lib
