@@ -62,7 +62,7 @@ jobs:
         working-directory: ${{runner.workspace}}/build
         run: |
           ./Release/bin/highs --solver=hipo \
-          $${{runner.workspace}}/HiGHS/check/instances/afiro.mps
+          $${{runner.workspace}}/highs-tests/HiGHS/check/instances/afiro.mps
 
       - name: Ctest
         shell: bash
