@@ -42,9 +42,10 @@ jobs:
 
       - name: Configure cmake
         shell: bash
-        working-directory: ${{runner.workspace}}/highs-tests/highs
         run: |
-          cmake $GITHUB_WORKSPACE \
+          cmake \
+          -S ${{runner.workspace}}/highs-tests/HiGHS \
+          -B ${{runner.workspace}}/build \
           -DHIPO=ON \
           -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
 
@@ -59,7 +60,9 @@ jobs:
       - name: Test executable 
         shell: bash
         working-directory: ${{runner.workspace}}/build
-        run: ./Release/bin/highs --solver=hipo $GITHUB_WORKSPACE/check/instances/afiro.mps
+        run: |
+          ./Release/bin/highs --solver=hipo \
+          $${{runner.workspace}}/highs-tests/HiGHS/check/instances/afiro.mps
 
       - name: Ctest
         shell: bash
