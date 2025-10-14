@@ -24,6 +24,7 @@ jobs:
 
       # todo: add overlay
       - name: Install METIS
+        shell: pwsh
         run: |
           vcpkg install metis gklib `
           --overlay-ports="$env:GITHUB_WORKSPACE/ports/metis" `
@@ -35,37 +36,39 @@ jobs:
         # run: ls C:/vcpkg/packages/gklib_x64-windows/share/gklib
 
       - name: Install OpenBLAS
+        shell: pwsh
+        run: |
         run: vcpkg install openblas[threads]
 
       - name: Create build dir
         run: cmake -E make_directory ${{runner.workspace}}/build
 
       - name: Configure cmake
-        shell: bash
+        shell: pwsh
         run: |
-          cmake \
-          -S ${{runner.workspace}}/highs-tests/HiGHS \
-          -B ${{runner.workspace}}/build \
-          -DHIPO=ON \
-          -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+          cmake `
+          -S "$env:GITHUB_WORKSPACE/HiGHS" `
+          -B "${{ runner.workspace }}/build" `
+          -DHIPO=ON `
+          -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
 
          # -DCMAKE_CXX_FLAGS="-I C:/vcpkg/packages/gklib_x64-windows/include/GKlib"
 
       - name: Build 
-        shell: bash
+        shell: pwsh
         working-directory: ${{runner.workspace}}/build
         run: |
           cmake --build . --parallel --config Release
 
       - name: Test executable 
-        shell: bash
+        shell: pwsh
         working-directory: ${{runner.workspace}}/build
         run: |
-          ./Release/bin/highs --solver=hipo \
-          $${{runner.workspace}}/highs-tests/HiGHS/check/instances/afiro.mps
+          & ".\Release\bin\highs.exe" --solver=hipo `
+          "${{ runner.workspace }}/highs-tests/HiGHS/check/instances/afiro.mps"
 
       - name: Ctest
-        shell: bash
+        shell: pwsh
         working-directory: ${{runner.workspace}}/build
         run: |
           ctest --parallel --timeout 300 --output-on-failure -C Release
