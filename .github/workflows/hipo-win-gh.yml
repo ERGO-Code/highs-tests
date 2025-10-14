@@ -37,7 +37,6 @@ jobs:
 
       - name: Install OpenBLAS
         shell: pwsh
-        run: |
         run: vcpkg install openblas[threads]
 
       - name: Create build dir
