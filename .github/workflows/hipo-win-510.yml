@@ -37,7 +37,7 @@ jobs:
           -S "$env:GITHUB_WORKSPACE/HiGHS" `
           -B build `
           -DGKLIB_PATH="$env:GITHUB_WORKSPACE/METIS/GKlib" `
-          -DCMAKE_INSTALL_PREFIX="${{ runner.workspace }}")/installs
+          -DCMAKE_INSTALL_PREFIX="${{ runner.workspace }}"/installs
           cmake --build build --parallel --config ${{ matrix.config }}
           cmake --install build --config ${{ matrix.config }}
 
