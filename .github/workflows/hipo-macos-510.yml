@@ -1,6 +1,5 @@
-name: hipo-ubuntu-gh
+name: hipo-macos-510
 
-# on: []
 on: [push, pull_request]
 
 jobs:
@@ -9,7 +8,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [macos-latest]
         branch: [hipo-tt]
         config: [Release, Debug]
         all_tests: [ON, OFF]
@@ -24,74 +23,31 @@ jobs:
           ref: ${{matrix.branch}}
           path: HiGHS
 
-      - name: Checkout GKlib
-        uses: actions/checkout@v4
-        with:
-          repository: KarypisLab/GKlib
-          ref: master
-          path: GKlib
-
       - name: Checkout METIS
         uses: actions/checkout@v4
         with:
-          repository: KarypisLab/METIS
-          ref: master
+          repository: galabovaa/METIS
+          ref: 510-w
           path: METIS
-
+ 
       - name: Create installs dir
         working-directory: ${{runner.workspace}}
         run: | 
           mkdir installs
-          ls
-
-      - name: Install GKLIB
-        run: |
-          cd GKlib
-          make config shared=1 prefix=${{runner.workspace}}/installs
-          make
-          make install
-
-      # - name: Check installs 
-      #   working-directory: ${{runner.workspace}}
-      #   run: |
-      #     cd installs
-      #     ls 
-      #     ls lib
-
-      - name: Copy GKlib shared (bug)
-        working-directory: ${{runner.workspace}}
-        run: |
-          cd installs
-          cd lib
-          ln libGKlib.so.0 libGKlib.so
-          ls 
 
       - name: Install METIS
         run: |
           cd METIS
-          make config shared=1 prefix=${{runner.workspace}}/installs 
-          make
-          make install
-
-      # no default blas available on runner
-
-      - name: Cache APT packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            /var/cache/apt/archives
-            /var/lib/apt/lists
-          key: ${{ runner.os }}-apt-libopenblas
-
-      - name: Install OpenBLAS
-        shell: bash
-        run: |
-          sudo apt update
-          sudo apt install libopenblas-dev 
+          pwd
+          cmake -S. -B build \
+          -DGKLIB_PATH=${{ github.workspace }}/METIS/GKlib \
+          -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/installs \
+          cmake --build build --parallel
+          cmake --install build
 
       - name: Create Build Environment
         run: cmake -E make_directory ${{runner.workspace}}/build
-
+         
       - name: Configure CMake
         run: |
           cmake \
@@ -99,9 +55,9 @@ jobs:
           -B ${{runner.workspace}}/build \
           -DHIPO=ON \
           -DMETIS_ROOT=${{runner.workspace}}/installs \
-          -DGKLIB_ROOT=${{runner.workspace}}/installs \
           -DCMAKE_BUILD_TYPE=${{ matrix.config }} \
           -DALL_TESTS=${{ matrix.all_tests}}
+
 
       - name: Build 
         working-directory: ${{runner.workspace}}/build

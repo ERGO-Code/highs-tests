@@ -1,0 +1,83 @@
+name: hipo-win-510
+
+on: [push, pull_request]
+# on: []
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        branch: [hipo-tt]
+        config: [Release, Debug]
+        all_tests: [ON, OFF]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout HiGHS
+        uses: actions/checkout@v4
+        with:
+          repository: ERGO-Code/HiGHS
+          ref: ${{matrix.branch}}
+          path: HiGHS
+
+      - name: Checkout METIS
+        uses: actions/checkout@v4
+        with:
+          repository: galabovaa/METIS
+          ref: 510-w
+          path: METIS
+
+      - name: Install METIS
+        shell: bash
+        run: |
+          INSTALLS_PREFIX=$(cygpath "${{ runner.workspace }}")/installs
+          cd METIS
+          pwd
+          cmake -S. -B build -DGKLIB_PATH=$GITHUB_WORKSPACE/METIS/GKlib -DCMAKE_INSTALL_PREFIX=$INSTALLS_PREFIX
+          cmake --build build --parallel --config Release
+          cmake --install build --config Release
+
+      - name: Install OpenBLAS
+        shell: pwsh
+        run: vcpkg install openblas[threads]
+
+      - name: Create build and install dir
+        run: |
+          cmake -E make_directory ${{runner.workspace}}/build
+          cmake -E make_directory ${{runner.workspace}}/installs
+
+      - name: Configure cmake
+        shell: bash
+        working-directory: ${{runner.workspace}}/build
+        run: |
+          METIS_ROOT=$(cygpath "${{ runner.workspace }}")/installs
+          cmake $GITHUB_WORKSPACE \
+          -DHIPO=ON \
+          -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake \
+          -DMETIS_ROOT=$METIS_ROOT \
+          -DALL_TESTS=${{ matrix.all_tests}}
+
+         # -DCMAKE_CXX_FLAGS="-I C:/vcpkg/packages/gklib_x64-windows/include/GKlib"
+
+      - name: Build 
+        shell: pwsh
+        working-directory: ${{runner.workspace}}/build
+        run: |
+          cmake --build . --parallel --config Release
+
+      - name: Test executable 
+        shell: pwsh
+        working-directory: ${{runner.workspace}}/build
+        run: |
+          & ".\Release\bin\highs.exe" --solver=hipo `
+          "${{ runner.workspace }}/highs-tests/HiGHS/check/instances/afiro.mps"
+
+      - name: Ctest
+        shell: pwsh
+        working-directory: ${{runner.workspace}}/build
+        run: |
+          ctest --parallel --timeout 300 --output-on-failure -C Release
