@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        branch: [hipo-dev-tt-gk]
+        branch: [hipo-tt-dev-gk]
 
     steps:
       - uses: actions/checkout@v4
@@ -22,25 +22,33 @@ jobs:
           ref: ${{matrix.branch}}
           path: HiGHS
 
-      # todo: add overlay
-      - name: Install METIS
-        shell: pwsh
-        run: |
-          vcpkg install metis gklib `
-          --overlay-ports="$env:GITHUB_WORKSPACE/ports/metis" `
-          --overlay-ports="$env:GITHUB_WORKSPACE/ports/gklib"
+      - name: Checkout METIS
+        uses: actions/checkout@v4
+        with:
+          repository: galabovaa/METIS
+          ref: 510-w
+          path: METIS
 
-        # run: ls C:/vcpkg/packages/metis_x64-windows/
-        # run: ls C:/vcpkg/packages/metis_x64-windows/lib
-        # run: ls C:/vcpkg/packages/metis_x64-windows/share
-        # run: ls C:/vcpkg/packages/gklib_x64-windows/share/gklib
+      - name: Install METIS
+        shell: bash
+        run: |
+          INSTALLS_PREFIX=$(cygpath "${{ runner.workspace }}")/installs
+          cd METIS
+          pwd
+          cmake -S. -B build -DGKLIB_PATH=$GITHUB_WORKSPACE/METIS/GKlib -DCMAKE_INSTALL_PREFIX=$INSTALLS_PREFIX
+          cmake --build build --parallel --config Release
+          cmake --install build --config Release
 
       - name: Install OpenBLAS
         shell: pwsh
         run: vcpkg install openblas[threads]
 
-      - name: Create build dir
-        run: cmake -E make_directory ${{runner.workspace}}/build
+      - name: Create build and install dir
+        working-directory: ${{runner.workspace}}
+        shell: pwsh
+        run: |
+          mkdir build
+          mkdir installs
 
       - name: Configure cmake
         shell: pwsh
@@ -50,6 +58,22 @@ jobs:
           -B "${{ runner.workspace }}/build" `
           -DHIPO=ON `
           -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+
+      - name: Create installs dir
+        run: | 
+          ls
+          mkdir installs
+          ls
+
+      - name: Configure cmake
+        shell: bash
+        working-directory: ${{runner.workspace}}/build
+        run: |
+          METIS_ROOT=$(cygpath "${{ runner.workspace }}")/installs
+          cmake $GITHUB_WORKSPACE \
+          -DHIPO=ON \
+          -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake \
+          -DMETIS_ROOT=$METIS_ROOT
 
          # -DCMAKE_CXX_FLAGS="-I C:/vcpkg/packages/gklib_x64-windows/include/GKlib"
 

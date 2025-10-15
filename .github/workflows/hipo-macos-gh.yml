@@ -21,46 +21,27 @@ jobs:
           ref: ${{matrix.branch}}
           path: HiGHS
 
-      - name: Checkout GKlib
-        uses: actions/checkout@v4
-        with:
-          repository: KarypisLab/GKlib
-          ref: master
-          path: GKlib
-
       - name: Checkout METIS
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
         with:
-          repository: KarypisLab/METIS
-          ref: master
+          repository: galabovaa/METIS
+          ref: 509-w
           path: METIS
-
+ 
       - name: Create installs dir
         working-directory: ${{runner.workspace}}
         run: | 
           mkdir installs
-          ls
-
-      - name: Install GKLIB
-        run: |
-          cd GKlib
-          make config prefix=${{runner.workspace}}/installs
-          make
-          make install
 
       - name: Install METIS
         run: |
           cd METIS
-          make config prefix=${{runner.workspace}}/installs
-          make
-          make install
-
-      - name: Check METIS and GKlib
-        working-directory: ${{runner.workspace}}
-        run: |
-          cd installs
-          ls 
-          ls lib
+          pwd
+          cmake -S. -B build \
+          -DGKLIB_PATH=${{ github.workspace }}/METIS/GKlib \
+          -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/installs 
+          cmake --build build --parallel --config Release
+          cmake --install build
 
       - name: Create Build Environment
         run: cmake -E make_directory ${{runner.workspace}}/build
