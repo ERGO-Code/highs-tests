@@ -4,7 +4,7 @@ on: [push, pull_request]
 # on: []
 
 jobs:
-  release:
+  hipo:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -58,7 +58,7 @@ jobs:
         shell: pwsh
         working-directory: ${{runner.workspace}}/build
         run: |
-          & ".\Release\bin\highs.exe" --solver=hipo `
+          & ".\${{ matrix.config }}\bin\highs.exe" --solver=hipo `
           "${{ runner.workspace }}/highs-tests/HiGHS/check/instances/afiro.mps"
 
       - name: Ctest

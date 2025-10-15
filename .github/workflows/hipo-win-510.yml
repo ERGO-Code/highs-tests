@@ -4,7 +4,7 @@ on: [push, pull_request]
 # on: []
 
 jobs:
-  release:
+  hipo_510:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -38,8 +38,8 @@ jobs:
           -B build `
           -DGKLIB_PATH="$env:GITHUB_WORKSPACE/METIS/GKlib" `
           -DCMAKE_INSTALL_PREFIX="${{ runner.workspace }}")/installs
-          cmake --build build --parallel --config Release
-          cmake --install build --config Release
+          cmake --build build --parallel --config ${{ matrix.config }}
+          cmake --install build --config ${{ matrix.config }}
 
       - name: Install OpenBLAS
         shell: pwsh
@@ -58,7 +58,7 @@ jobs:
           -B "${{ runner.workspace }}/build" `
           -DHIPO=ON `
           -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake `
-          -DMETIS_ROOT= "${{ runner.workspace }}")/installs `
+          -DMETIS_ROOT= "${{ runner.workspace }}"/installs `
           -DALL_TESTS=${{ matrix.all_tests }}
 
          # -DCMAKE_CXX_FLAGS="-I C:/vcpkg/packages/gklib_x64-windows/include/GKlib"
@@ -67,17 +67,17 @@ jobs:
         shell: pwsh
         working-directory: ${{runner.workspace}}/build
         run: |
-          cmake --build . --parallel --config Release
+          cmake --build . --parallel --config ${{ matrix.config }}
 
       - name: Test executable
         shell: pwsh
         working-directory: ${{runner.workspace}}/build
         run: |
-          & ".\Release\bin\highs.exe" --solver=hipo `
+          & ".\${{ matrix.config }}\bin\highs.exe" --solver=hipo `
           "${{ runner.workspace }}/highs-tests/HiGHS/check/instances/afiro.mps"
 
       - name: Ctest
         shell: pwsh
         working-directory: ${{runner.workspace}}/build
         run: |
-          ctest --parallel --timeout 300 --output-on-failure -C Release
+          ctest --parallel --timeout 300 --output-on-failure -C ${{ runner.workspace }}

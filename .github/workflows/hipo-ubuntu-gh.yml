@@ -4,7 +4,7 @@ name: hipo-ubuntu-gh
 on: [push, pull_request]
 
 jobs:
-  release:
+  hipo:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

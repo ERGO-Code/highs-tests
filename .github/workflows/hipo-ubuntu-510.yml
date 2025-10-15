@@ -4,7 +4,7 @@ name: hipo-ubuntu-510
 on: [push, pull_request]
 
 jobs:
-  release:
+  hipo_510:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -44,7 +44,7 @@ jobs:
           -DGKLIB_PATH=${{ github.workspace }}/METIS/GKlib \
           -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/installs \
           -DCMAKE_BUILD_TYPE=${{ matrix.config }}
-          cmake --build build --parallel --config Release
+          cmake --build build --parallel
           cmake --install build
 
       # no default blas available on runner

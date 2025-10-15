@@ -3,7 +3,7 @@ name: hipo-macos-510
 on: [push, pull_request]
 
 jobs:
-  release:
+  hipo_510:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
