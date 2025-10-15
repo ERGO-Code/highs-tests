@@ -32,7 +32,6 @@ jobs:
           path: METIS
 
       - name: Install METIS
-        working-directory: ${{runner.workspace}}/highs-tests/builds
         run: |
           cmake `
           -S "$env:GITHUB_WORKSPACE/HiGHS" `
