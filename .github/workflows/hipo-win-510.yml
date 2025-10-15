@@ -61,8 +61,6 @@ jobs:
           -DMETIS_ROOT="${{ runner.workspace }}"/installs `
           -DALL_TESTS=${{ matrix.all_tests }}
 
-         # -DCMAKE_CXX_FLAGS="-I C:/vcpkg/packages/gklib_x64-windows/include/GKlib"
-
       - name: Build
         shell: pwsh
         working-directory: ${{runner.workspace}}/build
