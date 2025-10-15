@@ -52,8 +52,7 @@ jobs:
           -S ${{runner.workspace}}/highs-tests/HiGHS \
           -B ${{runner.workspace}}/build \
           -DHIPO=ON \
-          -DMETIS_ROOT=${{runner.workspace}}/installs \
-          -DGKLIB_ROOT=${{runner.workspace}}/installs 
+          -DMETIS_ROOT=${{runner.workspace}}/installs
 
       - name: Build 
         working-directory: ${{runner.workspace}}/build
