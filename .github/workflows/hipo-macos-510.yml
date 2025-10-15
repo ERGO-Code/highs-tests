@@ -29,10 +29,10 @@ jobs:
           repository: galabovaa/METIS
           ref: 510-w
           path: METIS
- 
+
       - name: Create installs dir
         working-directory: ${{runner.workspace}}
-        run: | 
+        run: |
           mkdir installs
 
       - name: Install METIS
@@ -42,12 +42,13 @@ jobs:
           cmake -S. -B build \
           -DGKLIB_PATH=${{ github.workspace }}/METIS/GKlib \
           -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/installs \
+          -DCMAKE_BUILD_TYPE=${{ matrix.config }}
           cmake --build build --parallel
           cmake --install build
 
       - name: Create Build Environment
         run: cmake -E make_directory ${{runner.workspace}}/build
-         
+
       - name: Configure CMake
         run: |
           cmake \
@@ -59,12 +60,12 @@ jobs:
           -DALL_TESTS=${{ matrix.all_tests}}
 
 
-      - name: Build 
+      - name: Build
         working-directory: ${{runner.workspace}}/build
         run: |
           cmake --build . --parallel
 
-      - name: Test executable 
+      - name: Test executable
         working-directory: ${{runner.workspace}}/build
         run: |
           ./bin/highs --solver=hipo \

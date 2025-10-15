@@ -33,7 +33,7 @@ jobs:
 
       - name: Create installs dir
         working-directory: ${{runner.workspace}}
-        run: | 
+        run: |
           mkdir installs
 
       - name: Install METIS
@@ -42,7 +42,8 @@ jobs:
           pwd
           cmake -S. -B build \
           -DGKLIB_PATH=${{ github.workspace }}/METIS/GKlib \
-          -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/installs 
+          -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/installs \
+          -DCMAKE_BUILD_TYPE=${{ matrix.config }}
           cmake --build build --parallel --config Release
           cmake --install build
 

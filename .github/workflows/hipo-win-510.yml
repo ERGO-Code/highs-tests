@@ -63,13 +63,13 @@ jobs:
 
          # -DCMAKE_CXX_FLAGS="-I C:/vcpkg/packages/gklib_x64-windows/include/GKlib"
 
-      - name: Build 
+      - name: Build
         shell: pwsh
         working-directory: ${{runner.workspace}}/build
         run: |
           cmake --build . --parallel --config Release
 
-      - name: Test executable 
+      - name: Test executable
         shell: pwsh
         working-directory: ${{runner.workspace}}/build
         run: |

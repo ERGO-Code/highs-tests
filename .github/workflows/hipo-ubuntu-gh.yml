@@ -40,22 +40,33 @@ jobs:
 
       - name: Create installs dir
         working-directory: ${{runner.workspace}}
-        run: | 
+        run: |
           mkdir installs
           ls
 
-      - name: Install GKLIB
+      - name: Install GKlib Release
+        working-directory: GKlib
+        if: ${{ matrix.config == "Release"}}
         run: |
           cd GKlib
           make config shared=1 prefix=${{runner.workspace}}/installs
           make
           make install
 
-      # - name: Check installs 
+      - name: Install GKlib Debug
+        working-directory: GKlib
+        if: ${{ matrix.config == "Debug"}}
+        run: |
+          cd GKlib
+          make config shared=1 prefix=${{runner.workspace}}/installs gdb=1 debug=1
+          make
+          make install
+
+      # - name: Check installs
       #   working-directory: ${{runner.workspace}}
       #   run: |
       #     cd installs
-      #     ls 
+      #     ls
       #     ls lib
 
       - name: Copy GKlib shared (bug)
@@ -64,12 +75,21 @@ jobs:
           cd installs
           cd lib
           ln libGKlib.so.0 libGKlib.so
-          ls 
+          ls
 
-      - name: Install METIS
+      - name: Install METIS Release
+        if: ${{ matrix.config == "Release"}}
         run: |
           cd METIS
-          make config shared=1 prefix=${{runner.workspace}}/installs 
+          make config shared=1 prefix=${{runner.workspace}}/installs
+          make
+          make install
+
+      - name: Install METIS Debug
+        if: ${{ matrix.config == "Debug"}}
+        run: |
+          cd METIS
+          make config shared=1 prefix=${{runner.workspace}}/installs gdb=1 debug=1
           make
           make install
 
@@ -87,7 +107,7 @@ jobs:
         shell: bash
         run: |
           sudo apt update
-          sudo apt install libopenblas-dev 
+          sudo apt install libopenblas-dev
 
       - name: Create Build Environment
         run: cmake -E make_directory ${{runner.workspace}}/build
@@ -103,12 +123,12 @@ jobs:
           -DCMAKE_BUILD_TYPE=${{ matrix.config }} \
           -DALL_TESTS=${{ matrix.all_tests}}
 
-      - name: Build 
+      - name: Build
         working-directory: ${{runner.workspace}}/build
         run: |
           cmake --build . --parallel
 
-      - name: Test executable 
+      - name: Test executable
         working-directory: ${{runner.workspace}}/build
         run: |
           ./bin/highs --solver=hipo \

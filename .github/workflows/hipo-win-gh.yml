@@ -48,13 +48,13 @@ jobs:
           -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" \
           -DALL_TESTS=${{ matrix.all_tests}}
 
-      - name: Build 
+      - name: Build
         shell: pwsh
         working-directory: ${{runner.workspace}}/build
         run: |
-          cmake --build . --parallel --config ${{ matrix.config }} 
+          cmake --build . --parallel --config ${{ matrix.config }}
 
-      - name: Test executable 
+      - name: Test executable
         shell: pwsh
         working-directory: ${{runner.workspace}}/build
         run: |
@@ -65,4 +65,4 @@ jobs:
         shell: pwsh
         working-directory: ${{runner.workspace}}/build
         run: |
-          ctest --parallel --timeout 300 --output-on-failure -C ${{ matrix.config }} 
+          ctest --parallel --timeout 300 --output-on-failure -C ${{ matrix.config }}
