@@ -45,7 +45,7 @@ jobs:
           -S "$env:GITHUB_WORKSPACE/HiGHS" `
           -B "${{ runner.workspace }}/build" `
           -DHIPO=ON `
-          -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" \
+          -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" `
           -DALL_TESTS=${{ matrix.all_tests}}
 
       - name: Build
