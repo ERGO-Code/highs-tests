@@ -44,11 +44,9 @@ jobs:
         run: vcpkg install openblas[threads]
 
       - name: Create build and install dir
-        working-directory: ${{runner.workspace}}
-        shell: pwsh
         run: |
-          mkdir build
-          mkdir installs
+          cmake -E make_directory ${{runner.workspace}}/build
+          cmake -E make_directory ${{runner.workspace}}/installs
 
       - name: Configure cmake
         shell: pwsh
@@ -58,12 +56,6 @@ jobs:
           -B "${{ runner.workspace }}/build" `
           -DHIPO=ON `
           -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
-
-      - name: Create installs dir
-        run: | 
-          ls
-          mkdir installs
-          ls
 
       - name: Configure cmake
         shell: bash
