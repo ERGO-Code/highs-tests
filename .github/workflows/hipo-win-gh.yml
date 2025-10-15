@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        branch: [hipo]
+        branch: [hipo-dev-tt-gk]
 
     steps:
       - uses: actions/checkout@v4
