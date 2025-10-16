@@ -46,7 +46,7 @@ jobs:
 
       - name: Install GKlib Release
         working-directory: GKlib
-        if: ${{ matrix.config == "Release"}}
+        if: ${{ matrix.config == 'Release' }}
         run: |
           cd GKlib
           make config shared=1 prefix=${{runner.workspace}}/installs
@@ -55,7 +55,7 @@ jobs:
 
       - name: Install GKlib Debug
         working-directory: GKlib
-        if: ${{ matrix.config == "Debug"}}
+        if: ${{ matrix.config == 'Debug' }}
         run: |
           cd GKlib
           make config shared=1 prefix=${{runner.workspace}}/installs gdb=1 debug=1
