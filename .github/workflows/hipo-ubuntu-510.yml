@@ -76,12 +76,12 @@ jobs:
           -DCMAKE_BUILD_TYPE=${{ matrix.config }} \
           -DALL_TESTS=${{ matrix.all_tests}}
 
-      - name: Build 
+      - name: Build
         working-directory: ${{runner.workspace}}/build
         run: |
           cmake --build . --parallel
 
-      - name: Test executable 
+      - name: Test executable
         working-directory: ${{runner.workspace}}/build
         run: |
           ./bin/highs --solver=hipo \
