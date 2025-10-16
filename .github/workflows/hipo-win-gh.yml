@@ -66,3 +66,4 @@ jobs:
         working-directory: ${{runner.workspace}}/build
         run: |
           ctest --parallel --timeout 300 --output-on-failure -C ${{ matrix.config }}
+          ls
