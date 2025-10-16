@@ -66,6 +66,7 @@ jobs:
         working-directory: ${{runner.workspace}}/build
         run: |
           cmake --build . --parallel --config ${{ matrix.config }}
+          ls
 
       - name: Test executable
         shell: pwsh
