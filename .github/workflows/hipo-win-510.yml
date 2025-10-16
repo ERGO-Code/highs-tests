@@ -34,7 +34,7 @@ jobs:
       - name: Install METIS
         run: |
           cmake `
-          -S "$env:GITHUB_WORKSPACE/HiGHS" `
+          -S "$env:GITHUB_WORKSPACE/METIS" `
           -B build `
           -DGKLIB_PATH="$env:GITHUB_WORKSPACE/METIS/GKlib" `
           -DCMAKE_INSTALL_PREFIX="${{ runner.workspace }}"/installs
@@ -53,7 +53,6 @@ jobs:
       - name: Configure cmake
         shell: pwsh
         run: |
-          cmake -S . -B build "-DMETIS_ROOT=$root"
           cmake `
           -S "$env:GITHUB_WORKSPACE/HiGHS" `
           -B "${{ runner.workspace }}/build" `

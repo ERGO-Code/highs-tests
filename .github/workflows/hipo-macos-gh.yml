@@ -62,7 +62,7 @@ jobs:
           make install
 
       - name: Install METIS Release
-        if: ${{ matrix.config == "Release"}}
+        if: ${{ matrix.config == 'Release'}}
         run: |
           cd METIS
           make config shared=1 prefix=${{runner.workspace}}/installs
@@ -70,7 +70,7 @@ jobs:
           make install
 
       - name: Install METIS Debug
-        if: ${{ matrix.config == "Debug"}}
+        if: ${{ matrix.config == 'Debug'}}
         run: |
           cd METIS
           make config shared=1 prefix=${{runner.workspace}}/installs gdb=1 debug=1
