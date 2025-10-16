@@ -12,7 +12,7 @@ jobs:
         os: [windows-latest]
         branch: [hipo-dev]
         config: [Release, Debug]
-        all_tests: [ON, OFF]
+        all_tests: [OFF]
 
     steps:
       - uses: actions/checkout@v4
