@@ -91,3 +91,112 @@ jobs:
         working-directory: ${{runner.workspace}}/build
         run: |
           ctest --parallel --timeout 300 --output-on-failure
+
+  hipo_install_and_cmake:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        branch: [hipo-tt]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout HiGHS
+        uses: actions/checkout@v4
+        with:
+          repository: ERGO-Code/HiGHS
+          ref: ${{matrix.branch}}
+          path: HiGHS
+
+      - name: Checkout METIS
+        uses: actions/checkout@v4
+        with:
+          repository: galabovaa/METIS
+          ref: 510-w
+          path: METIS
+
+      - name: Create installs dir
+        working-directory: ${{runner.workspace}}
+        run: |
+          mkdir installs
+
+      - name: Install METIS
+        run: |
+          cd METIS
+          pwd
+          cmake -S. -B build \
+          -DGKLIB_PATH=${{ github.workspace }}/METIS/GKlib \
+          -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/installs \
+          -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+          cmake --build build --parallel
+          cmake --install build
+
+      - name: Create Build Environment
+        run: cmake -E make_directory ${{runner.workspace}}/build
+
+      - name: Configure CMake
+        run: |
+          cmake \
+          -S ${{runner.workspace}}/highs-tests/HiGHS \
+          -B ${{runner.workspace}}/build \
+          -DHIPO=ON \
+          -DMETIS_ROOT=${{runner.workspace}}/installs \
+          -DCMAKE_BUILD_TYPE=${{ matrix.config }} \
+          -DALL_TESTS=${{ matrix.all_tests}} \
+          -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/installs
+
+      - name: Build
+        working-directory: ${{runner.workspace}}/build
+        run: |
+          cmake --build . --parallel
+
+      - name: Test executable
+        working-directory: ${{runner.workspace}}/build
+        run: |
+          ./bin/highs --solver=hipo \
+          ${{runner.workspace}}/highs-tests/HiGHS/check/instances/afiro.mps
+
+      - name: Install HiGHS
+        working-directory: ${{runner.workspace}}/build
+        run: |
+          cmake --install .
+
+      - name: Test install executable
+        working-directory: ${{runner.workspace}}/installs
+        run: |
+          ./bin/highs --solver=hipo \
+          ${{runner.workspace}}/highs-tests/HiGHS/check/instances/afiro.mps
+
+      - name: Checkout CMakeHighsFindPackage
+        uses: actions/checkout@v4
+        with:
+          repository: galabovaa/CMakeHighsFindPackage
+          ref: master
+          path: CMakeHighsFindPackage
+
+      - name: Create Build Environment
+        run: cmake -E make_directory ${{runner.workspace}}/build-find
+
+      - name: Build CMakeFindHighsPackage
+        working-directory: ${{runner.workspace}}/build-find
+        shell: bash
+        run: |
+          cmake ${{runner.workspace}}/highs-tests/CMakeHighsFindPackage \
+            -DHIGHS_DIR=${{runner.workspace}}/installs \
+            -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install-find-highs
+          cmake --build . --parallel
+          cmake --install .
+
+      - name: Test build
+        working-directory: ${{runner.workspace}}/build-find
+        shell: bash
+        run: |
+          ./main
+
+      - name: Test install
+        working-directory: ${{runner.workspace}}/install-find-highs
+        shell: bash
+        run: |
+          DYLD_LIBRARY_PATH=${{runner.workspace}}/installs/lib ./bin/main
