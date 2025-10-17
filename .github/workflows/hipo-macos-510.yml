@@ -60,6 +60,17 @@ jobs:
           -DALL_TESTS=${{ matrix.all_tests}} \
           -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/installs
 
+      - name: Build
+        working-directory: ${{runner.workspace}}/build
+        run: |
+          cmake --build . --parallel
+
+      - name: Test executable
+        working-directory: ${{runner.workspace}}/build
+        run: |
+          ./bin/highs --solver=hipo \
+          ${{runner.workspace}}/highs-tests/HiGHS/check/instances/afiro.mps
+
       - name: Ctest
         working-directory: ${{runner.workspace}}/build
         run: |
