@@ -198,7 +198,7 @@ jobs:
         shell: bash
         run: |
           cmake ${{runner.workspace}}/highs-tests/CMakeHighsFindPackage \
-            -DHIGHS_DIR=${{runner.workspace}}/installs \
+            -DHIGHS_DIR=${{runner.workspace}}/installs/lib/cmake/highs \
             -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install-find-highs
           cmake --build . --parallel
           cmake --install .
@@ -214,3 +214,82 @@ jobs:
         shell: bash
         run: |
           DYLD_LIBRARY_PATH=${{runner.workspace}}/installs/lib ./bin/main
+
+  fetch:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        branch: [hipo-tt]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout CMakeHighsFetchContent
+        uses: actions/checkout@v4
+        with:
+          repository: galabovaa/CMakeHighsFetchContent
+          ref: main
+          path: CMakeHighsFetchContent
+
+      - name: Checkout METIS
+        uses: actions/checkout@v4
+        with:
+          repository: galabovaa/METIS
+          ref: 510-w
+          path: METIS
+
+      - name: Create build and install dir
+        run: |
+          cmake -E make_directory ${{runner.workspace}}/build
+          cmake -E make_directory ${{runner.workspace}}/installs 
+
+      - name: Install METIS
+        run: |
+          cd METIS
+          pwd
+          cmake -S. -B build \
+          -DGKLIB_PATH=${{ github.workspace }}/METIS/GKlib \
+          -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/installs \
+          -DCMAKE_BUILD_TYPE=${{ matrix.config }}
+          cmake --build build --parallel
+          cmake --install build
+
+      - name: Cache APT packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            /var/cache/apt/archives
+            /var/lib/apt/lists
+          key: ${{ runner.os }}-apt-libopenblas
+
+      - name: Install OpenBLAS
+        shell: bash
+        run: |
+          sudo apt update
+          sudo apt install libopenblas-dev
+
+      - name: Configure CMake
+        run: |
+          cmake \
+          -S ${{runner.workspace}}/highs-tests/CMakeHighsFetchContent \
+          -B ${{runner.workspace}}/build \
+          -DHIPO=ON \
+          -DMETIS_ROOT=${{runner.workspace}}/installs \
+          -DBRANCH=${{matrix.branch}} \
+          -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/installs
+          cmake --build . --parallel 
+          cmake --install .
+
+      - name: Test 
+        working-directory: ${{runner.workspace}}/build
+        shell: bash
+        run: |
+          ./main
+
+      - name: Test install
+        working-directory: ${{runner.workspace}}/installs
+        shell: bash
+        run: |
+          ./bin/main
