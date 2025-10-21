@@ -1,6 +1,5 @@
 name: hipo-ubuntu-510
 
-# on: []
 on: [push, pull_request]
 
 jobs:
