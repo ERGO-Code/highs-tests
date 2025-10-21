@@ -213,7 +213,11 @@ jobs:
         working-directory: ${{runner.workspace}}/install-find-highs
         shell: bash
         run: |
-          DYLD_LIBRARY_PATH=${{runner.workspace}}/installs/lib ./bin/main
+          echo "----- ls"
+          ls 
+          echo "----- ls lib"
+          ls lib
+          LD_LIBRARY_PATH=${{runner.workspace}}/installs/lib ./bin/main
 
   fetch:
     runs-on: ${{ matrix.os }}
@@ -272,6 +276,10 @@ jobs:
 
       - name: Configure CMake
         run: |
+          ls ${{runner.workspace}}/build
+          rm -rf ${{runner.workspace}}/build
+          cmake -E make_directory ${{runner.workspace}}/build
+          cd CMakeHighsFetchContent 
           cmake \
           -S ${{runner.workspace}}/highs-tests/CMakeHighsFetchContent \
           -B ${{runner.workspace}}/build \
