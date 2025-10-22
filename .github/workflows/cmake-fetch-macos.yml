@@ -9,7 +9,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        branch: [master, latest]
+        branch: [master, latest, ortools-unpatch]
 
     steps:
       - uses: actions/checkout@v4
