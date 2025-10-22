@@ -153,9 +153,18 @@ jobs:
           ctest --parallel --timeout 300 --output-on-failure -C ${{ matrix.config }}
 
       - name: Install HiGHS
+        shell: pwsh
         working-directory: ${{runner.workspace}}/build
         run: |
           cmake --install .
+
+      - name: Test install executable
+        shell: pwsh
+        working-directory: ${{runner.workspace}}/installs
+        run: |
+          ls
+          ls bin
+          & "${{runner.workspace}}\installs\bin\highs.exe" --version
 
       - name: Test install executable
         shell: pwsh
@@ -279,4 +288,5 @@ jobs:
         run: |
           echo "----- ls"
           ls 
-          .\${{ matrix.config }}\main.exe
+          ls bin
+          .\bin\main.exe
