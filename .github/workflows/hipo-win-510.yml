@@ -158,10 +158,13 @@ jobs:
           cmake --install .
 
       - name: Test install executable
+        shell: pwsh
         working-directory: ${{runner.workspace}}/installs
         run: |
           ls
           ls bin
+          & ".\bin\highs.exe" --version
+          ls "${{ runner.workspace }}/highs-tests/HiGHS/check/instances/afiro.mps"
           & ".\bin\highs.exe" --solver=hipo `
           "${{ runner.workspace }}/highs-tests/HiGHS/check/instances/afiro.mps"
 
@@ -177,7 +180,6 @@ jobs:
 
       - name: Build CMakeFindHighsPackage
         working-directory: ${{runner.workspace}}/build-find
-        shell: bash
         run: |
           cmake ${{runner.workspace}}/highs-tests/CMakeHighsFindPackage `
             -DHIGHS_DIR="${{runner.workspace}}/installs/lib/cmake/highs" `
@@ -268,13 +270,12 @@ jobs:
 
       - name: Test 
         working-directory: ${{runner.workspace}}/build
-        shell: bash
         run: |
+          ls
           .\${{ matrix.config }}\main.exe
 
       - name: Test install
         working-directory: ${{runner.workspace}}/installs
-        shell: bash
         run: |
           echo "----- ls"
           ls 
