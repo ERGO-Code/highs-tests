@@ -1,0 +1,58 @@
+name: ortools-ubuntu
+
+on: [push, pull_request]
+
+jobs:
+  run:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        branch: [ortools-unpatch]
+        # config: [Release, Debug]
+        # all_tests: [ON, OFF]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout HiGHS
+        uses: actions/checkout@v4
+        with:
+          repository: ERGO-Code/HiGHS
+          ref: ${{matrix.branch}}
+          path: HiGHS
+
+      - name: Checkout ortools
+        uses: actions/checkout@v4
+        with:
+          repository: google/ortools
+          ref: main
+          path: ortools
+
+      - name: Patch OR-Tools
+        run: |
+          cd ortools
+          git apply ${{ github.workspace }}/patch.patch
+
+      - name: Build OR-Tools
+        run: |
+          cd ortools
+          pwd
+          cmake -S. -B ${{runner.workspace}}/build \
+          -DBUILD_DEPS=ON
+          -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/installs \
+          cmake --build build --parallel
+          cmake --install build
+
+      - name: Test executable
+        working-directory: ${{runner.workspace}}/build
+        run: |
+          ./bin/solve \
+          --solver=highs \
+          --input=${{ github.workspace }}/ortools/math_opt/solver_tests/testdata/beavma.mps
+
+      - name: Test HiGHS
+        working-directory: ${{runner.workspace}}/build
+        run: |
+          ./bin/math_opt_solvers_highs_solver_test
