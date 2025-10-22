@@ -45,7 +45,7 @@ jobs:
           cd ortools
           pwd
           cmake -S. -B ${{runner.workspace}}/build \
-          -DBUILD_DEPS=ON
+          -DBUILD_DEPS=ON \
           -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/installs \
           cmake --build build --parallel
           cmake --install build
