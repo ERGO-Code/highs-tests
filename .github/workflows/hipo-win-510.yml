@@ -88,6 +88,7 @@ jobs:
       matrix:
         os: [windows-latest]
         branch: [hipo-tt]
+        config: [Release]
 
     steps:
       - uses: actions/checkout@v4
@@ -113,7 +114,7 @@ jobs:
           -B build `
           -DGKLIB_PATH="$env:GITHUB_WORKSPACE/METIS/GKlib" `
           -DCMAKE_INSTALL_PREFIX="${{ runner.workspace }}"/installs
-          cmake --build build --parallel --config ${{ matrix.config }}
+          cmake --build build --parallel --config Release${{ matrix.config }}
           cmake --install build --config ${{ matrix.config }}
 
       - name: Install OpenBLAS
@@ -202,6 +203,7 @@ jobs:
       matrix:
         os: [windows-latest]
         branch: [hipo-tt]
+        config: [Release]
 
     steps:
       - uses: actions/checkout@v4
