@@ -161,7 +161,8 @@ jobs:
         working-directory: ${{runner.workspace}}/installs
         run: |
           ls
-          & ".\${{ matrix.config }}\bin\highs.exe" --solver=hipo `
+          ls bin
+          & ".\bin\highs.exe" --solver=hipo `
           "${{ runner.workspace }}/highs-tests/HiGHS/check/instances/afiro.mps"
 
       - name: Checkout CMakeHighsFindPackage
@@ -248,8 +249,6 @@ jobs:
           echo "----- ls build"
           ls ${{runner.workspace}}/build
           echo "-----"
-          rm -rf ${{runner.workspace}}/build
-          cmake -E make_directory ${{runner.workspace}}/build
           cd CMakeHighsFetchContent 
           cmake `
           -S ${{runner.workspace}}/highs-tests/CMakeHighsFetchContent `
