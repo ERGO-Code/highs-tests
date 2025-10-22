@@ -90,3 +90,94 @@ jobs:
         working-directory: ${{runner.workspace}}/build
         run: |
           ctest --parallel --timeout 300 --output-on-failure
+
+
+  hipo_510_64:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        branch: [hipo-tt]
+        config: [Release, Debug]
+        all_tests: [ON, OFF]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout HiGHS
+        uses: actions/checkout@v4
+        with:
+          repository: ERGO-Code/HiGHS
+          ref: ${{matrix.branch}}
+          path: HiGHS
+
+      - name: Checkout METIS
+        uses: actions/checkout@v4
+        with:
+          repository: galabovaa/METIS
+          ref: 510-ts
+          path: METIS
+
+      - name: Create installs dir
+        working-directory: ${{runner.workspace}}
+        run: |
+          mkdir installs
+
+      - name: Install METIS
+        run: |
+          cd METIS
+          pwd
+          cmake -S. -B build \
+          -DGKLIB_PATH=${{ github.workspace }}/METIS/GKlib \
+          -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/installs \
+          -DCMAKE_BUILD_TYPE=${{ matrix.config }} \
+          -DCMAKE_C_FLAGS="-DIDXTYPEWIDTH=64"
+          cmake --build build --parallel
+          cmake --install build
+
+      # no default blas available on runner
+
+      - name: Cache APT packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            /var/cache/apt/archives
+            /var/lib/apt/lists
+          key: ${{ runner.os }}-apt-libopenblas
+
+      - name: Install OpenBLAS
+        shell: bash
+        run: |
+          sudo apt update
+          sudo apt install libopenblas-dev
+
+      - name: Create Build Environment
+        run: cmake -E make_directory ${{runner.workspace}}/build
+
+      - name: Configure CMake
+        run: |
+          cmake \
+          -S ${{runner.workspace}}/highs-tests/HiGHS \
+          -B ${{runner.workspace}}/build \
+          -DHIPO=ON \
+          -DMETIS_ROOT=${{runner.workspace}}/installs \
+          -DCMAKE_BUILD_TYPE=${{ matrix.config }} \
+          -DALL_TESTS=${{ matrix.all_tests}} \
+          -DHIGHSINT64=ON
+
+      - name: Build
+        working-directory: ${{runner.workspace}}/build
+        run: |
+          cmake --build . --parallel
+
+      - name: Test executable
+        working-directory: ${{runner.workspace}}/build
+        run: |
+          ./bin/highs --solver=hipo \
+          ${{runner.workspace}}/highs-tests/HiGHS/check/instances/afiro.mps
+
+      - name: Ctest
+        working-directory: ${{runner.workspace}}/build
+        run: |
+          ctest --parallel --timeout 300 --output-on-failure
