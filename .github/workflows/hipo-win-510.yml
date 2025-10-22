@@ -130,7 +130,7 @@ jobs:
           -DHIPO=ON `
           -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake `
           -DMETIS_ROOT="${{ runner.workspace }}/installs" `
-          -DALL_TESTS=${{ matrix.all_tests }}
+          -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/installs
 
       - name: Build
         shell: pwsh
@@ -240,16 +240,6 @@ jobs:
       - name: Install OpenBLAS
         shell: pwsh
         run: vcpkg install openblas[threads]
-
-      - name: Configure cmake
-        shell: pwsh
-        run: |
-          cmake `
-          -S "$env:GITHUB_WORKSPACE/HiGHS" `
-          -B "${{ runner.workspace }}/build" `
-          -DHIPO=ON `
-          -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake `
-          -DMETIS_ROOT="${{ runner.workspace }}/installs" `
 
       - name: Configure CMake
         run: |
