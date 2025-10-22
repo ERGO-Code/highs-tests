@@ -47,8 +47,8 @@ jobs:
           cmake -S. -B ${{runner.workspace}}/build \
           -DBUILD_DEPS=ON \
           -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/installs
-          cmake --build build --parallel
-          cmake --install build
+          cmake --build ${{runner.workspace}}/build --parallel
+          cmake --install ${{runner.workspace}}/build
 
       - name: Test executable
         working-directory: ${{runner.workspace}}/build
