@@ -74,8 +74,9 @@ jobs:
 
       - name: Patch OR-Tools
         run: |
-          cd or-tools
+          ls
           lscpu
+          cd or-tools
          
         # git apply ${{ github.workspace }}/patch.patch
 
@@ -126,7 +127,7 @@ jobs:
         run: |
           ./bin/solve \
           --solver=highs \
-          --input=${{ github.workspace }}/or-tools/math_opt/solver_tests/testdata/beavma.mps
+          --input=${{ github.workspace }}/or-tools/ortools/math_opt/solver_tests/testdata/beavma.mps
 
       - name: Test HiGHS
         working-directory: ${{runner.workspace}}/build
