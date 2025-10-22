@@ -16,13 +16,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Checkout HiGHS
-        uses: actions/checkout@v4
-        with:
-          repository: ERGO-Code/HiGHS
-          ref: ${{matrix.branch}}
-          path: HiGHS
-
       - name: Checkout ortools
         uses: actions/checkout@v4
         with:
@@ -33,7 +26,8 @@ jobs:
       - name: Patch OR-Tools
         run: |
           cd ortools
-          git apply ${{ github.workspace }}/patch.patch
+         
+        # git apply ${{ github.workspace }}/patch.patch
 
       - name: Create build and install dir
         run: |
@@ -47,7 +41,7 @@ jobs:
           cmake -S. -B ${{runner.workspace}}/build \
           -DBUILD_DEPS=ON \
           -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/installs
-          cmake --build ${{runner.workspace}}/build --parallel
+          cmake --build ${{runner.workspace}}/build -v -j10
           cmake --install ${{runner.workspace}}/build
 
       - name: Test executable
