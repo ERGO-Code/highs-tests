@@ -12,6 +12,10 @@ jobs:
         branch: [ortools-unpatch]
         # config: [Release, Debug]
         # all_tests: [ON, OFF]
+    env:
+      deps_src_key: linux_cpp_deps_src
+      deps_build_key: linux_cpp_deps_build
+      ccache_key: amd64_linux_cpp_ccache
 
     steps:
       - uses: actions/checkout@v4
@@ -23,40 +27,34 @@ jobs:
           ref: main
           path: or-tools
 
-        env:
-          deps_src_key: linux_cpp_deps_src
-          deps_build_key: linux_cpp_deps_build
-          ccache_key: amd64_linux_cpp_ccache
+      - uses: actions/checkout@v5
+      - name: Install Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y ninja-build ccache
 
-        steps:
-        - uses: actions/checkout@v5
-        - name: Install Dependencies
-          run: |
-            sudo apt update
-            sudo apt install -y ninja-build ccache
-
-        # RESTORING CACHES
-        - name: Restore CMake dependency source code
-          uses: actions/cache/restore@v4
-          id: deps_src_restore
-          with:
-            key: ${{env.deps_src_key}}-${{hashFiles('CMakeLists.txt', 'cmake/**')}}
-            path: ${{github.workspace}}/or-tools/build/_deps/*-src
-        - name: Restore CMake dependency build
-          uses: actions/cache/restore@v4
-          id: deps_build_restore
-          with:
-            key: ${{env.deps_build_key}}-${{hashFiles('CMakeLists.txt', 'cmake/**')}}
-            path: |
-              ${{github.workspace}}/or-tools/build/_deps/*-build
-              ${{github.workspace}}/or-tools/build/_deps/*-subbuild
-        - name: Restore CCache
-          uses: actions/cache/restore@v4
-          id: ccache_restore
-          with:
-            key: ${{env.ccache_key}}-${{github.sha}}
-            restore-keys: ${{env.ccache_key}}-
-            path: ${{env.CCACHE_DIR}}
+      # RESTORING CACHES
+      - name: Restore CMake dependency source code
+        uses: actions/cache/restore@v4
+        id: deps_src_restore
+        with:
+          key: ${{env.deps_src_key}}-${{hashFiles('CMakeLists.txt', 'cmake/**')}}
+          path: ${{github.workspace}}/or-tools/build/_deps/*-src
+      - name: Restore CMake dependency build
+        uses: actions/cache/restore@v4
+        id: deps_build_restore
+        with:
+          key: ${{env.deps_build_key}}-${{hashFiles('CMakeLists.txt', 'cmake/**')}}
+          path: |
+            ${{github.workspace}}/or-tools/build/_deps/*-build
+            ${{github.workspace}}/or-tools/build/_deps/*-subbuild
+      - name: Restore CCache
+        uses: actions/cache/restore@v4
+        id: ccache_restore
+        with:
+          key: ${{env.ccache_key}}-${{github.sha}}
+          restore-keys: ${{env.ccache_key}}-
+          path: ${{env.CCACHE_DIR}}
 
       - name: Patch OR-Tools
         run: |
