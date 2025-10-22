@@ -49,6 +49,10 @@ jobs:
           sudo apt update
           sudo apt install -y ninja-build ccache
 
+      - name: Patch OR-Tools
+        run: |
+          ls
+
       # RESTORING CACHES
       - name: Restore CMake dependency source code
         uses: actions/cache/restore@v4
