@@ -84,23 +84,22 @@ jobs:
           ls
           lscpu
           cd or-tools
-         
+
         # git apply ${{ github.workspace }}/patch.patch
 
       - name: Create build and install dir
         run: |
-          cmake -E make_directory ${{runner.workspace}}/build
-          cmake -E make_directory ${{runner.workspace}}/installs 
+          cmake -E make_directory ${{runner.workspace}}/installs
 
       - name: Build OR-Tools
         run: |
           cd or-tools
           pwd
-          cmake -S. -B ${{runner.workspace}}/build \
+          cmake -S. -B build \
           -DBUILD_DEPS=ON \
           -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/installs
-          cmake --build ${{runner.workspace}}/build -v -j30
-          cmake --install ${{runner.workspace}}/build
+          cmake --build build -v -j30
+          cmake --install build
 
       - name: CCache stats
         run: |
@@ -130,13 +129,14 @@ jobs:
           path: ${{github.workspace}}/or-tools/build/_deps/*-src
 
       - name: Test executable
-        working-directory: ${{runner.workspace}}/build
         run: |
+          cd or-tools
+          cd build
           ./bin/solve \
           --solver=highs \
           --input=${{ github.workspace }}/or-tools/ortools/math_opt/solver_tests/testdata/beavma.mps
 
       - name: Test HiGHS
-        working-directory: ${{runner.workspace}}/build
         run: |
-          ./bin/math_opt_solvers_highs_solver_test
+          cd or-tools
+          ./build/bin/math_opt_solvers_highs_solver_test
