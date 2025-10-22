@@ -35,6 +35,11 @@ jobs:
           cd ortools
           git apply ${{ github.workspace }}/patch.patch
 
+      - name: Create build and install dir
+        run: |
+          cmake -E make_directory ${{runner.workspace}}/build
+          cmake -E make_directory ${{runner.workspace}}/installs 
+
       - name: Build OR-Tools
         run: |
           cd ortools
