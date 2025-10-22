@@ -115,7 +115,7 @@ jobs:
           -S "$env:GITHUB_WORKSPACE/METIS" `
           -B build `
           -DGKLIB_PATH="$env:GITHUB_WORKSPACE/METIS/GKlib" `
-          -DCMAKE_INSTALL_PREFIX="${{ runner.workspace }}"/installs
+          -DCMAKE_INSTALL_PREFIX="${{ runner.workspace }}"/installs `
           -DCMAKE_C_FLAGS="-DIDXTYPEWIDTH=64"
           cmake --build build --parallel --config ${{ matrix.config }}
           cmake --install build --config ${{ matrix.config }}
@@ -138,7 +138,7 @@ jobs:
           -DHIPO=ON `
           -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake `
           -DMETIS_ROOT="${{ runner.workspace }}/installs" `
-          -DALL_TESTS=${{ matrix.all_tests }} \
+          -DALL_TESTS=${{ matrix.all_tests }} `
           -DHIGHSINT64=ON
 
       - name: Build
