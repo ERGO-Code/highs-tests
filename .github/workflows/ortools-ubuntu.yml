@@ -1,6 +1,22 @@
 name: ortools-ubuntu
 
-on: [push, pull_request]
+# on: [push, pull_request]
+
+on:
+  push:
+    branches:
+      - ortools
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{github.workflow}}-${{github.ref}}
+  cancel-in-progress: true
+
+# Building using the github runner environement directly.
+env:
+  CCACHE_BASEDIR: ${{github.workspace}}
+  CCACHE_DIR: ${{github.workspace}}/.ccache
 
 jobs:
   run:
