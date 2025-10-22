@@ -43,15 +43,19 @@ jobs:
           ref: main
           path: or-tools
 
+      - name: Patch OR-Tools
+        run: |
+          pwd
+          ls
+          cd ${{github.workspace}}
+          pwd
+          ls
+
       - uses: actions/checkout@v5
       - name: Install Dependencies
         run: |
           sudo apt update
           sudo apt install -y ninja-build ccache
-
-      - name: Patch OR-Tools
-        run: |
-          ls
 
       # RESTORING CACHES
       - name: Restore CMake dependency source code
