@@ -187,7 +187,7 @@ jobs:
           ls 
           echo "----- ls installs/lib"
           ls ${{runner.workspace}}/installs/lib
-          LD_LIBRARY_PATH=${{runner.workspace}}/installs/lib ./bin/main
+          DYLD_LIBRARY_PATH=${{runner.workspace}}/installs/lib ./bin/main
 
   fetch:
     runs-on: ${{ matrix.os }}
