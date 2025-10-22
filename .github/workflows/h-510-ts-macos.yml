@@ -1,4 +1,4 @@
-name: w510-ts-debug
+name: h-510-ts-macos
 
 on: [push, pull_request]
 

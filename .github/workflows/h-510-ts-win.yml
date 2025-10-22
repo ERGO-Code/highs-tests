@@ -1,4 +1,4 @@
-name: hipo-win-510
+name: h-510-ts-win
 
 on: [push, pull_request]
 # on: []

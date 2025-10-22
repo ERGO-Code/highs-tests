@@ -1,4 +1,4 @@
-name: hipo-ubuntu-510
+name: h-510-ts-ubuntu
 
 on: [push, pull_request]
 

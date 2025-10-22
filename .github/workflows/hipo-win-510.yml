@@ -80,3 +80,210 @@ jobs:
         working-directory: ${{runner.workspace}}/build
         run: |
           ctest --parallel --timeout 300 --output-on-failure -C ${{ matrix.config }}
+
+  hipo_install_and_cmake:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        branch: [hipo-tt]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout HiGHS
+        uses: actions/checkout@v4
+        with:
+          repository: ERGO-Code/HiGHS
+          ref: ${{matrix.branch}}
+          path: HiGHS
+
+      - name: Checkout METIS
+        uses: actions/checkout@v4
+        with:
+          repository: galabovaa/METIS
+          ref: 510-ts
+          path: METIS
+
+      - name: Install METIS
+        run: |
+          cmake `
+          -S "$env:GITHUB_WORKSPACE/METIS" `
+          -B build `
+          -DGKLIB_PATH="$env:GITHUB_WORKSPACE/METIS/GKlib" `
+          -DCMAKE_INSTALL_PREFIX="${{ runner.workspace }}"/installs
+          cmake --build build --parallel --config ${{ matrix.config }}
+          cmake --install build --config ${{ matrix.config }}
+
+      - name: Install OpenBLAS
+        shell: pwsh
+        run: vcpkg install openblas[threads]
+
+      - name: Configure cmake
+        shell: pwsh
+        run: |
+          cmake `
+          -S "$env:GITHUB_WORKSPACE/HiGHS" `
+          -B "${{ runner.workspace }}/build" `
+          -DHIPO=ON `
+          -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake `
+          -DMETIS_ROOT="${{ runner.workspace }}/installs" `
+          -DALL_TESTS=${{ matrix.all_tests }}
+
+      - name: Build
+        shell: pwsh
+        working-directory: ${{runner.workspace}}/build
+        run: |
+          cmake --build . --parallel --config ${{ matrix.config }}
+          ls
+
+      - name: Test executable
+        shell: pwsh
+        working-directory: ${{runner.workspace}}/build
+        run: |
+          & ".\${{ matrix.config }}\bin\highs.exe" --solver=hipo `
+          "${{ runner.workspace }}/highs-tests/HiGHS/check/instances/afiro.mps"
+
+      - name: Ctest
+        shell: pwsh
+        working-directory: ${{runner.workspace}}/build
+        run: |
+          ctest --parallel --timeout 300 --output-on-failure -C ${{ matrix.config }}
+
+      - name: Install HiGHS
+        working-directory: ${{runner.workspace}}/build
+        run: |
+          cmake --install .
+
+      - name: Test install executable
+        working-directory: ${{runner.workspace}}/installs
+        run: |
+          ls
+          & ".\${{ matrix.config }}\bin\highs.exe" --solver=hipo `
+          "${{ runner.workspace }}/highs-tests/HiGHS/check/instances/afiro.mps"
+
+      - name: Checkout CMakeHighsFindPackage
+        uses: actions/checkout@v4
+        with:
+          repository: galabovaa/CMakeHighsFindPackage
+          ref: master
+          path: CMakeHighsFindPackage
+
+      - name: Create Build Environment
+        run: cmake -E make_directory ${{runner.workspace}}/build-find
+
+      - name: Build CMakeFindHighsPackage
+        working-directory: ${{runner.workspace}}/build-find
+        shell: bash
+        run: |
+          cmake ${{runner.workspace}}/highs-tests/CMakeHighsFindPackage `
+            -DHIGHS_DIR="${{runner.workspace}}/installs/lib/cmake/highs" `
+            -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install-find-highs
+          cmake --build . --parallel --config Release
+          cmake --install .
+
+      - name: Test build
+        working-directory: ${{runner.workspace}}/build-find
+        run: |
+          & ".\${{ matrix.config }}\main.exe"
+
+      - name: Test install
+        working-directory: ${{runner.workspace}}/install-find-highs
+        run: |
+          echo "----- ls"
+          ls 
+          & ".\${{ matrix.config }}\main.exe"
+
+  fetch:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        branch: [hipo-tt]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout CMakeHighsFetchContent
+        uses: actions/checkout@v4
+        with:
+          repository: galabovaa/CMakeHighsFetchContent
+          ref: main
+          path: CMakeHighsFetchContent
+
+      - name: Checkout METIS
+        uses: actions/checkout@v4
+        with:
+          repository: galabovaa/METIS
+          ref: 510-ts
+          path: METIS
+
+      - name: Create build and install dir
+        run: |
+          cmake -E make_directory ${{runner.workspace}}/build
+          cmake -E make_directory ${{runner.workspace}}/installs 
+
+      - name: Install METIS
+        run: |
+          cmake `
+          -S "$env:GITHUB_WORKSPACE/METIS" `
+          -B build `
+          -DGKLIB_PATH="$env:GITHUB_WORKSPACE/METIS/GKlib" `
+          -DCMAKE_INSTALL_PREFIX="${{ runner.workspace }}"/installs
+          cmake --build build --parallel --config ${{ matrix.config }}
+          cmake --install build --config ${{ matrix.config }}
+
+      - name: Install OpenBLAS
+        shell: pwsh
+        run: vcpkg install openblas[threads]
+
+      - name: Configure cmake
+        shell: pwsh
+        run: |
+          cmake `
+          -S "$env:GITHUB_WORKSPACE/HiGHS" `
+          -B "${{ runner.workspace }}/build" `
+          -DHIPO=ON `
+          -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake `
+          -DMETIS_ROOT="${{ runner.workspace }}/installs" `
+
+      - name: Configure CMake
+        run: |
+          echo "----- ls installs/lib"
+          ls ${{runner.workspace}}/installs/lib
+          echo "----- ls build"
+          ls ${{runner.workspace}}/build
+          echo "-----"
+          rm -rf ${{runner.workspace}}/build
+          cmake -E make_directory ${{runner.workspace}}/build
+          cd CMakeHighsFetchContent 
+          cmake `
+          -S ${{runner.workspace}}/highs-tests/CMakeHighsFetchContent `
+          -B ${{runner.workspace}}/build `
+          -DHIPO=ON `
+          -DMETIS_ROOT="${{runner.workspace}}/installs" `
+          -DBRANCH=${{matrix.branch}} `
+          -DCMAKE_INSTALL_PREFIX="${{runner.workspace}}/installs"
+
+      - name: Build 
+        working-directory: ${{runner.workspace}}/build
+        run: |
+          ls
+          cmake --build . --parallel --config Release
+          cmake --install .
+
+      - name: Test 
+        working-directory: ${{runner.workspace}}/build
+        shell: bash
+        run: |
+          & ".\${{ matrix.config }}\main.exe"
+
+      - name: Test install
+        working-directory: ${{runner.workspace}}/installs
+        shell: bash
+        run: |
+          echo "----- ls"
+          ls 
+          & ".\${{ matrix.config }}\main.exe"
