@@ -26,7 +26,7 @@ jobs:
       - name: Checkout ortools
         uses: actions/checkout@v4
         with:
-          repository: google/ortools
+          repository: google/or-tools
           ref: main
           path: ortools
 
