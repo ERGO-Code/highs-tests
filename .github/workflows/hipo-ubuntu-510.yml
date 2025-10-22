@@ -204,7 +204,7 @@ jobs:
           ls 
           echo "----- ls installs/lib"
           ls ${{runner.workspace}}/installs/lib
-          LD_LIBRARY_PATH=${{runner.workspace}}/installs/lib ./bin/main
+          LD_LIBRARY_PATH=${{runner.workspace}}/build/lib ./bin/main
 
   hipo_install_and_cmake:
     runs-on: ${{ matrix.os }}
