@@ -162,7 +162,8 @@ jobs:
         run: |
           ls
           ls bin
-          .\bin\highs.exe --solver=hipo "${{ runner.workspace }}/highs-tests/HiGHS/check/instances/afiro.mps"
+          & ".\bin\highs.exe" --solver=hipo `
+          "${{ runner.workspace }}/highs-tests/HiGHS/check/instances/afiro.mps"
 
       - name: Checkout CMakeHighsFindPackage
         uses: actions/checkout@v4
@@ -194,7 +195,7 @@ jobs:
         run: |
           echo "----- ls"
           ls 
-          & ".\${{ matrix.config }}\main.exe"
+          .\main.exe
 
   fetch:
     runs-on: ${{ matrix.os }}
@@ -269,7 +270,7 @@ jobs:
         working-directory: ${{runner.workspace}}/build
         shell: bash
         run: |
-          & ".\${{ matrix.config }}\main.exe"
+          .\${{ matrix.config }}\main.exe
 
       - name: Test install
         working-directory: ${{runner.workspace}}/installs
