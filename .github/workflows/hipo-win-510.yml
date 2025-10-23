@@ -185,6 +185,7 @@ jobs:
         run: |
           cmake ${{runner.workspace}}/highs-tests/CMakeHighsFindPackage `
             -DHIGHS_DIR="${{runner.workspace}}/installs/lib/cmake/highs" `
+            -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake `
             -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install-find-highs
           cmake --build . --parallel --config Release
           cmake --install .
