@@ -1,0 +1,142 @@
+name: ortools-ubuntu
+
+# on: [push, pull_request]
+
+on:
+  push:
+    branches:
+      - ortools
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{github.workflow}}-${{github.ref}}
+  cancel-in-progress: true
+
+# Building using the github runner environement directly.
+env:
+  CCACHE_BASEDIR: ${{github.workspace}}
+  CCACHE_DIR: ${{github.workspace}}/.ccache
+
+jobs:
+  run:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        branch: [ortools-unpatch]
+        # config: [Release, Debug]
+        # all_tests: [ON, OFF]
+    env:
+      deps_src_key: linux_cpp_deps_src
+      deps_build_key: linux_cpp_deps_build
+      ccache_key: amd64_linux_cpp_ccache
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout ortools
+        uses: actions/checkout@v4
+        with:
+          repository: google/or-tools
+          ref: main
+          path: or-tools
+
+      - name: LS
+        run: |
+          pwd
+          ls
+          cd ${{github.workspace}}
+          pwd
+          ls
+
+      - name: Install Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y ninja-build ccache
+
+      # RESTORING CACHES
+      - name: Restore CMake dependency source code
+        uses: actions/cache/restore@v4
+        id: deps_src_restore
+        with:
+          key: ${{env.deps_src_key}}-${{hashFiles('CMakeLists.txt', 'cmake/**')}}
+          path: ${{github.workspace}}/or-tools/build/_deps/*-src
+      - name: Restore CMake dependency build
+        uses: actions/cache/restore@v4
+        id: deps_build_restore
+        with:
+          key: ${{env.deps_build_key}}-${{hashFiles('CMakeLists.txt', 'cmake/**')}}
+          path: |
+            ${{github.workspace}}/or-tools/build/_deps/*-build
+            ${{github.workspace}}/or-tools/build/_deps/*-subbuild
+      - name: Restore CCache
+        uses: actions/cache/restore@v4
+        id: ccache_restore
+        with:
+          key: ${{env.ccache_key}}-${{github.sha}}
+          restore-keys: ${{env.ccache_key}}-
+          path: ${{env.CCACHE_DIR}}
+
+      - name: Patch OR-Tools
+        run: |
+          ls
+          lscpu
+          cd or-tools
+
+        # git apply ${{ github.workspace }}/patch.patch
+
+      - name: Create build and install dir
+        run: |
+          cmake -E make_directory ${{runner.workspace}}/installs
+
+      - name: Build OR-Tools
+        run: |
+          cd or-tools
+          pwd
+          cmake -S. -B build \
+          -DBUILD_DEPS=ON \
+          -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/installs
+          cmake --build build -v -j30
+          cmake --install build
+
+      - name: CCache stats
+        run: |
+          ccache --show-stats
+          ccache --zero-stats
+
+        # SAVING CACHES
+      - name: Save CCache
+        # if: github.ref == 'refs/heads/main'
+        uses: actions/cache/save@v4
+        with:
+          key: ${{steps.ccache_restore.outputs.cache-primary-key}}
+          path: ${{env.CCACHE_DIR}}
+      - name: Save CMake dependency build
+        # if: github.ref == 'refs/heads/main'
+        uses: actions/cache/save@v4
+        with:
+          key: ${{steps.deps_build_restore.outputs.cache-primary-key}}
+          path: |
+            ${{github.workspace}}/or-tools/build/_deps/*-build
+            ${{github.workspace}}/or-tools/build/_deps/*-subbuild
+      - name: Save CMake dependency source code
+        # if: github.ref == 'refs/heads/main'
+        uses: actions/cache/save@v4
+        with:
+          key: ${{steps.deps_src_restore.outputs.cache-primary-key}}
+          path: ${{github.workspace}}/or-tools/build/_deps/*-src
+
+      - name: Test executable
+        run: |
+          cd or-tools
+          cd build
+          ./bin/solve \
+          --solver=highs \
+          --input=${{ github.workspace }}/or-tools/ortools/math_opt/solver_tests/testdata/beavma.mps
+
+      - name: Test HiGHS
+        run: |
+          cd or-tools
+          ./build/bin/math_opt_solvers_highs_solver_test
