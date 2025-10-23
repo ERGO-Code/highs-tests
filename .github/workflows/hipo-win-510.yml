@@ -87,7 +87,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        branch: [latest]
+        branch: [latest, cmake_blas]
         config: [Release]
 
     steps:
@@ -186,8 +186,7 @@ jobs:
           cmake ${{runner.workspace}}/highs-tests/CMakeHighsFindPackage `
             -DHIGHS_DIR="${{runner.workspace}}/installs/lib/cmake/highs" `
             -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake `
-            -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install-find-highs `
-            -DUSE_HIPO=ON
+            -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install-find-highs
           cmake --build . --parallel --config Release
           cmake --install .
 
@@ -223,6 +222,7 @@ jobs:
           cd CMakeHighsFindPackage
           ls
           cat CMakeLists.txt
+          cmake --version
 
 
   fetch:
