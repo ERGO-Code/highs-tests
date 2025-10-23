@@ -99,9 +99,10 @@ jobs:
           cd build
           ls
           ls bin
-          ./bin/Release/solve.exe `
+          ls bin/Release
+          & ".\bin\Release\solve.exe `
           --solver=highs `
-          --input=${{ github.workspace }}/or-tools/ortools/math_opt/solver_tests/testdata/beavma.mps
+          --input="${{ github.workspace }}/or-tools/ortools/math_opt/solver_tests/testdata/beavma.mps"
 
       - name: Test HiGHS
         run: |
