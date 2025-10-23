@@ -27,7 +27,7 @@ jobs:
         os: [macos-latest]
         branch: [ortools-unpatch]
         # config: [Release, Debug]
-        # all_tests: [ON, OFF] 
+        # all_tests: [ON, OFF]
         cmake: [
           # {name: "Xcode", generator: "Xcode", config: Release, build_target: ALL_BUILD, test_target: RUN_TESTS, install_target: install},
           {name: "Make", generator: "Unix Makefiles", config: Release, build_target: all, test_target: test, install_target: install},
@@ -85,7 +85,6 @@ jobs:
       - name: Patch OR-Tools
         run: |
           ls
-          lscpu
           cd or-tools
 
         # git apply ${{ github.workspace }}/patch.patch
