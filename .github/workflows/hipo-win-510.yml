@@ -204,6 +204,27 @@ jobs:
           $env:path = "$env:path;C:\vcpkg\installed\x64-windows\bin\"
           .\bin\main.exe
 
+  test:
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+
+      - name: Checkout CMakeHighsFindPackage
+        uses: actions/checkout@v4
+        with:
+          repository: galabovaa/CMakeHighsFindPackage
+          ref: master
+          path: CMakeHighsFindPackage
+
+      - name: Test install
+        run: |
+          cd CMakeHighsFindPackage
+          ls
+          cat CMakeLists.txt
+
+
   fetch:
     runs-on: ${{ matrix.os }}
     strategy:
