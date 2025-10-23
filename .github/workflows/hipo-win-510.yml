@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        branch: [hipo-tt]
+        branch: [latest]
         config: [Release, Debug]
         all_tests: [ON, OFF]
 
@@ -87,7 +87,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        branch: [hipo-tt]
+        branch: [latest]
         config: [Release]
 
     steps:
@@ -210,7 +210,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        branch: [hipo-tt]
+        branch: [latest]
         config: [Release]
 
     steps:

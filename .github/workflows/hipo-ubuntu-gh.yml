@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        branch: [hipo-tt]
+        branch: [latest]
         config: [Release, Debug]
         all_tests: [ON, OFF]
 

@@ -9,7 +9,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        branch: [hipo-tt]
+        branch: [latest]
         config: [Release, Debug]
         all_tests: [ON, OFF]
 
@@ -97,7 +97,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        branch: [hipo-tt]
+        branch: [latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -212,7 +212,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        branch: [hipo-ttr]
+        branch: [latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -339,7 +339,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        branch: [hipo-tt]
+        branch: [latest]
 
     steps:
       - uses: actions/checkout@v4
