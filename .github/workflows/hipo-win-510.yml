@@ -204,8 +204,8 @@ jobs:
           $env:path = "$env:path;C:\vcpkg\installed\x64-windows\bin\"
           .\bin\main.exe
 
-  test:
-    runs-on: ${{ matrix.os }}
+  test_name:
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
