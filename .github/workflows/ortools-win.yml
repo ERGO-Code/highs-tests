@@ -86,8 +86,8 @@ jobs:
           cd or-tools
           pwd
           cmake -S. -B build `
-          -G "${{matrix.cmake.generator}}"
-          -DCMAKE_CONFIGURATION_TYPES=${{matrix.cmake.config}}
+          -G "${{matrix.cmake.generator}}" `
+          -DCMAKE_CONFIGURATION_TYPES=${{matrix.cmake.config}} `
           -DBUILD_DEPS=ON `
           -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/installs
           cmake --build build -j2 --config Release
