@@ -172,6 +172,7 @@ jobs:
         run: |
           ls
           ls bin
+          $env:path = "$env:path;C:\vcpkg\installed\x64-windows\bin\"
           & ".\bin\highs.exe" --version
           ls "${{ runner.workspace }}/highs-tests/HiGHS/check/instances/afiro.mps"
           & ".\bin\highs.exe" --solver=hipo `
@@ -199,13 +200,15 @@ jobs:
       - name: Test build
         working-directory: ${{runner.workspace}}/build-find
         run: |
+          $env:path = "$env:path;C:\vcpkg\installed\x64-windows\bin\"
           & ".\${{ matrix.config }}\main.exe"
 
       - name: Test install
         working-directory: ${{runner.workspace}}/install-find-highs
         run: |
           echo "----- ls"
-          ls 
+          ls
+          $env:path = "$env:path;C:\vcpkg\installed\x64-windows\bin\"
           .\main.exe
 
   fetch:
@@ -237,7 +240,7 @@ jobs:
       - name: Create build and install dir
         run: |
           cmake -E make_directory ${{runner.workspace}}/build
-          cmake -E make_directory ${{runner.workspace}}/installs 
+          cmake -E make_directory ${{runner.workspace}}/installs
 
       - name: Install METIS
         run: |
@@ -260,7 +263,7 @@ jobs:
           echo "----- ls build"
           ls ${{runner.workspace}}/build
           echo "-----"
-          cd CMakeHighsFetchContent 
+          cd CMakeHighsFetchContent
           cmake `
           -S ${{runner.workspace}}/highs-tests/CMakeHighsFetchContent `
           -B ${{runner.workspace}}/build `
@@ -270,14 +273,14 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${{runner.workspace}}/installs" `
           -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
 
-      - name: Build 
+      - name: Build
         working-directory: ${{runner.workspace}}/build
         run: |
           ls
           cmake --build . --parallel --config Release
           cmake --install .
 
-      - name: Test 
+      - name: Test
         working-directory: ${{runner.workspace}}/build
         run: |
           ls
@@ -287,6 +290,7 @@ jobs:
         working-directory: ${{runner.workspace}}/installs
         run: |
           echo "----- ls"
-          ls 
+          ls
           ls bin
+          $env:path = "$env:path;C:\vcpkg\installed\x64-windows\bin\"
           .\bin\main.exe
