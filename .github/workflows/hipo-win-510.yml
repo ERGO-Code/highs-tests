@@ -164,14 +164,6 @@ jobs:
         run: |
           ls
           ls bin
-          & "${{runner.workspace}}\installs\bin\highs.exe" --version
-
-      - name: Test install executable
-        shell: pwsh
-        working-directory: ${{runner.workspace}}/installs
-        run: |
-          ls
-          ls bin
           $env:path = "$env:path;C:\vcpkg\installed\x64-windows\bin\"
           & ".\bin\highs.exe" --version
           ls "${{ runner.workspace }}/highs-tests/HiGHS/check/instances/afiro.mps"
