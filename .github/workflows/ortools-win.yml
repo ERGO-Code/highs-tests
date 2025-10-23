@@ -73,7 +73,6 @@ jobs:
       - name: Patch OR-Tools
         run: |
           ls
-          lscpu
           cd or-tools
 
         # git apply ${{ github.workspace }}/patch.patch

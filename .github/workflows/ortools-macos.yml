@@ -32,7 +32,7 @@ jobs:
           # {name: "Xcode", generator: "Xcode", config: Release, build_target: ALL_BUILD, test_target: RUN_TESTS, install_target: install},
           {name: "Make", generator: "Unix Makefiles", config: Release, build_target: all, test_target: test, install_target: install},
         ]
-      name: CMake(${{matrix.cmake.name}})•C++
+    name: CMake(${{matrix.cmake.name}})•C++
     env:
       deps_src_key: macos_cpp_deps_src
       deps_build_key: arm64_macos_cpp_deps_build_${{matrix.cmake.name}}
