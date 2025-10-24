@@ -45,7 +45,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: google/or-tools
-          ref: main
+          ref: 9789365f574f5e4857117d410ff177bbbae622fd
           path: or-tools
 
       - name: LS
@@ -86,8 +86,7 @@ jobs:
         run: |
           ls
           cd or-tools
-
-        # git apply ${{ github.workspace }}/patch.patch
+          git apply ${{ github.workspace }}/patch.patch
 
       - name: Create build and install dir
         run: |
