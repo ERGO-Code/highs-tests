@@ -5,7 +5,7 @@ name: ortools-macos
 on:
   push:
     branches:
-      - ortools
+      - ortools-version
   pull_request:
   workflow_dispatch:
 
