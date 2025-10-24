@@ -96,7 +96,7 @@ jobs:
       - name: Test executable
         run: |
           cd or-tools
-          & ".build\Release\bin\solve.exe `
+          & ".\build\Release\bin\solve.exe" `
           --solver=highs `
           --input="${{ github.workspace }}/or-tools/ortools/math_opt/solver_tests/testdata/beavma.mps"
 
