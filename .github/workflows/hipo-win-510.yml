@@ -87,7 +87,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        branch: [latest, cmake-blas]
+        branch: [latest]
         config: [Release]
 
     steps:
