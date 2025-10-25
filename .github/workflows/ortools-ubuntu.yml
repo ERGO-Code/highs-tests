@@ -5,7 +5,7 @@ name: ortools-ubuntu
 on:
   push:
     branches:
-      - ortools
+      - ortools-c
   pull_request:
   workflow_dispatch:
 
