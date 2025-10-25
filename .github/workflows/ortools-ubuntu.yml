@@ -25,10 +25,11 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
+        branch: [a268d895bb5836d14be812108aaf0faa75af99dd]
     env:
-      deps_src_key: linux_cpp_deps_src
-      deps_build_key: linux_cpp_deps_build
-      ccache_key: amd64_linux_cpp_ccache
+      deps_src_key: linux_cpp_deps_src-${{matrix.branch}}
+      deps_build_key: linux_cpp_deps_build-${{matrix.branch}}
+      ccache_key: amd64_linux_cpp_ccache-${{matrix.branch}}
 
     steps:
       - uses: actions/checkout@v4
