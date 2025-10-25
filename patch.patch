@@ -7,7 +7,7 @@ index 47ba576e3e..7014b3e2d9 100644
      highs
      GIT_REPOSITORY "https://github.com/ERGO-Code/HiGHS.git"
 -    GIT_TAG        "v1.11.0"
-+    GIT_TAG        "a268d895bb5836d14be812108aaf0faa75af99dd"
++    GIT_TAG        "755a8e027a99a8d4ecf153a8dde4b2a767cdf384"
      GIT_SHALLOW TRUE
      UPDATE_COMMAND git reset --hard
 -    PATCH_COMMAND git apply --ignore-whitespace
