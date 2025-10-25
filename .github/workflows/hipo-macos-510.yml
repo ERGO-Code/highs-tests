@@ -9,7 +9,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        branch: [latest]
+        branch: [master, latest]
         config: [Release, Debug]
         all_tests: [ON, OFF]
 
@@ -82,7 +82,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        branch: [latest]
+        branch: [master, latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -195,7 +195,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        branch: [latest]
+        branch: [master, latest]
 
     steps:
       - uses: actions/checkout@v4

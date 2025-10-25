@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        branch: [hipo-dev]
+        branch: [master, latest]
         config: [Release, Debug]
         all_tests: [OFF]
 
