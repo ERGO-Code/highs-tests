@@ -255,6 +255,7 @@ jobs:
         run: |
           cmake -E make_directory ${{runner.workspace}}/build
           cmake -E make_directory ${{runner.workspace}}/installs
+          ls
 
       - name: Install METIS
         run: |
