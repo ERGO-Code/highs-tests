@@ -25,13 +25,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        # branch: [ortools-unpatch]
         cmake: [
           {name: "VS2022", generator: "Visual Studio 17 2022", config: Release},
           # {name: "VS2022", generator: "Visual Studio 17 2022", config: Debug}, # too many symbols
         ]
-        # config: [Release, Debug]
-        # all_tests: [ON, OFF]
     name: CMake(${{matrix.cmake.name}},${{matrix.cmake.config}})
     env:
       deps_src_key: amd64_windows_cpp_deps_src

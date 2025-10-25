@@ -25,9 +25,6 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        # branch: [ortools-unpatch]
-        # config: [Release, Debug]
-        # all_tests: [ON, OFF]
     env:
       deps_src_key: linux_cpp_deps_src
       deps_build_key: linux_cpp_deps_build
@@ -98,6 +95,7 @@ jobs:
           -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/installs
           cmake --build build -v -j30
           cmake --install build
+          ls
 
       - name: CCache stats
         run: |
