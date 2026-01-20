@@ -1,0 +1,48 @@
+name: cmake-fetch-linux
+
+on: [push, pull_request]
+
+jobs:
+  fetch_ubuntu:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        branch: [master, latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout CMakeHighsFetchContent
+        uses: actions/checkout@v4
+        with:
+          repository: galabovaa/CMakeHighsFetchContent
+          ref: main
+          path: CMakeHighsFetchContent-main-${{matrix.branch}}
+
+      - name: Create build dir
+        run: |
+          cmake -E make_directory ${{runner.workspace}}/build-fetch-${{matrix.branch}}
+
+      - name: Build CMakeFindHighsPackage
+        working-directory: ${{runner.workspace}}/build-fetch-${{matrix.branch}}
+        shell: bash
+        run: |
+          cmake ${{runner.workspace}}/highs-tests/CMakeHighsFetchContent-main-${{matrix.branch}} \
+            -DBRANCH=${{matrix.branch}} \
+            -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install-fetch-${{matrix.branch}}
+          cmake --build . --parallel 
+          cmake --install .
+
+      - name: Test 
+        working-directory: ${{runner.workspace}}/build-fetch-${{matrix.branch}}
+        shell: bash
+        run: |
+          ./main
+
+      - name: Test install
+        working-directory: ${{runner.workspace}}/install-fetch-${{matrix.branch}}
+        shell: bash
+        run: |
+          ./bin/main

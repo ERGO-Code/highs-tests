@@ -1,0 +1,50 @@
+name: cmake-fetch-windows
+
+on: [push, pull_request]
+
+jobs:
+  fetch_win:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        branch: [master, latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout CMakeHighsFetchContent
+        uses: actions/checkout@v4
+        with:
+          repository: galabovaa/CMakeHighsFetchContent
+          ref: main
+          path: CMakeHighsFetchContent-main-${{matrix.branch}}
+
+      - name: Create build dir
+        run: |
+          mkdir ${{runner.workspace}}\\build-fetch-${{matrix.branch}}
+
+      - name: Configure CMakeFindHighsPackage
+        working-directory: ${{runner.workspace}}\\build-fetch-${{matrix.branch}}
+        run: >-
+          cmake ${{runner.workspace}}\\highs-tests\\CMakeHighsFetchContent-main-${{matrix.branch}}
+          -DBRANCH=${{matrix.branch}}
+          -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install-fetch-${{matrix.branch}}
+
+      - name: Build CMakeFindHighsPackage
+        working-directory: ${{runner.workspace}}\\build-fetch-${{matrix.branch}}
+        run: |
+          cmake --build . --parallel --config Release
+          cmake --install .
+
+      - name: Test 
+        working-directory: ${{runner.workspace}}\\build-fetch-${{matrix.branch}}
+        run: |
+          .\\Release\\main.exe
+
+      - name: Test install
+        working-directory: ${{runner.workspace}}\\install-fetch-${{matrix.branch}}
+        shell: bash
+        run: |
+          .\\bin\\main.exe

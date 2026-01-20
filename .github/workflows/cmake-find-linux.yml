@@ -1,0 +1,73 @@
+name: cmake-find-linux
+
+on: [push, pull_request]
+
+jobs:
+  find_i_ubuntu:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        branch: [master, latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout HiGHS repo
+        uses: actions/checkout@v4
+        with:
+          repository: ERGO-Code/HiGHS
+          ref: ${{matrix.branch}}
+          path: HiGHS-${{matrix.branch}}
+
+      - name: Checkout CMakeHighsFindPackage
+        uses: actions/checkout@v4
+        with:
+          repository: galabovaa/CMakeHighsFindPackage
+          ref: master
+          path: CMakeHighsFindPackage-master-${{matrix.branch}}
+
+      - name: Create build and install dirs
+        run: |
+          cmake -E make_directory ${{runner.workspace}}/build-highs-${{matrix.branch}}
+          cmake -E make_directory ${{runner.workspace}}/install-highs-${{matrix.branch}}
+          cmake -E make_directory ${{runner.workspace}}/build-find-highs-${{matrix.branch}}
+          cmake -E make_directory ${{runner.workspace}}/install-find-highs-${{matrix.branch}}
+
+      - name: Configure CMake HiGHS
+        shell: bash
+        working-directory: ${{runner.workspace}}/build-highs-${{matrix.branch}}
+        run: |
+          cmake ${{runner.workspace}}/highs-tests/HiGHS-${{matrix.branch}} \
+            -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install-highs-${{matrix.branch}}
+
+      - name: Build, ctest and install HiGHS
+        working-directory: ${{runner.workspace}}/build-highs-${{matrix.branch}}
+        shell: bash
+        run: |
+          cmake --build . --parallel 
+          ctest
+          cmake --install .
+
+      - name: Build CMakeFindHighsPackage
+        working-directory: ${{runner.workspace}}/build-find-highs-${{matrix.branch}}
+        shell: bash
+        run: |
+          cmake ${{runner.workspace}}/highs-tests/CMakeHighsFindPackage-master-${{matrix.branch}} \
+            -DHIGHS_DIR=${{runner.workspace}}/install-highs-${{matrix.branch}}/lib/cmake/highs \
+            -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install-find-highs-${{matrix.branch}}
+          cmake --build . --parallel 
+          cmake --install .
+
+      - name: Test build
+        working-directory: ${{runner.workspace}}/build-find-highs-${{matrix.branch}}
+        shell: bash
+        run: |
+          ./main
+
+      - name: Test install
+        working-directory: ${{runner.workspace}}/install-find-highs-${{matrix.branch}}
+        shell: bash
+        run: |
+          LD_LIBRARY_PATH=${{runner.workspace}}/install-highs-${{matrix.branch}}/lib ./bin/main
