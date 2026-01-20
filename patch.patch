@@ -1,0 +1,32 @@
+diff --git a/cmake/dependencies/CMakeLists.txt b/cmake/dependencies/CMakeLists.txt
+index 47ba576e3e..7014b3e2d9 100644
+--- a/cmake/dependencies/CMakeLists.txt
++++ b/cmake/dependencies/CMakeLists.txt
+@@ -303,11 +303,11 @@ if(BUILD_HIGHS)
+   FetchContent_Declare(
+     highs
+     GIT_REPOSITORY "https://github.com/ERGO-Code/HiGHS.git"
+-    GIT_TAG        "v1.11.0"
++    GIT_TAG        "755a8e027a99a8d4ecf153a8dde4b2a767cdf384"
+     GIT_SHALLOW TRUE
+     UPDATE_COMMAND git reset --hard
+-    PATCH_COMMAND git apply --ignore-whitespace
+-    "${CMAKE_CURRENT_LIST_DIR}/../../patches/highs-v1.11.0.patch"
++    # PATCH_COMMAND git apply --ignore-whitespace
++    # "${CMAKE_CURRENT_LIST_DIR}/../../patches/highs-v1.11.0.patch"
+   )
+   set(CI OFF) # disable CI tests
+   set(BUILD_EXAMPLES OFF)
+diff --git a/ortools/math_opt/solvers/highs_solver_test.cc b/ortools/math_opt/solvers/highs_solver_test.cc
+index 6c3805bdda..a05b8fd9f7 100644
+--- a/ortools/math_opt/solvers/highs_solver_test.cc
++++ b/ortools/math_opt/solvers/highs_solver_test.cc
+@@ -233,7 +233,7 @@ INSTANTIATE_TEST_SUITE_P(
+                                      /*support_message_callback=*/true,
+                                      /*support_interrupter=*/false,
+                                      /*integer_variables=*/true,
+-                                     /*ending_substring=*/"(heuristics)")));
++                                     /*ending_substring=*/"LP iterations     0")));
+ 
+ // HiGHS does not support callbacks other than message callback.
+ GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(CallbackTest);

@@ -1,0 +1,102 @@
+name: ortools-win
+
+# on: [push, pull_request]
+
+on:
+  push:
+    branches:
+      - ortools
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{github.workflow}}-${{github.ref}}
+  cancel-in-progress: true
+
+# Building using the github runner environement directly.
+env:
+  CCACHE_BASEDIR: ${{github.workspace}}
+  CCACHE_DIR: ${{github.workspace}}/.ccache
+
+jobs:
+  run:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        cmake: [
+          {name: "VS2022", generator: "Visual Studio 17 2022", config: Release},
+          # {name: "VS2022", generator: "Visual Studio 17 2022", config: Debug}, # too many symbols
+        ]
+    name: CMake(${{matrix.cmake.name}},${{matrix.cmake.config}})
+    env:
+      deps_src_key: amd64_windows_cpp_deps_src
+      deps_build_key: amd64_windows_cpp_deps_build_${{matrix.cmake.config}}
+      CTEST_OUTPUT_ON_FAILURE: 1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout ortools
+        uses: actions/checkout@v4
+        with:
+          repository: google/or-tools
+          ref: 9789365f574f5e4857117d410ff177bbbae622fd
+          path: or-tools
+
+      - name: LS
+        run: |
+          pwd
+          ls
+          cd ${{github.workspace}}
+          pwd
+          ls
+
+      # CONFIGURING CACHES
+      - name: Cache CMake dependency source code
+        uses: actions/cache@v4
+        with:
+          key: ${{env.deps_src_key}}-${{hashFiles('CMakeLists.txt', 'cmake/**')}}
+          path: ${{github.workspace}}/build/_deps/*-src
+      - name: Cache CMake dependency build
+        uses: actions/cache@v4
+        with:
+          key: ${{env.deps_build_key}}-${{hashFiles('CMakeLists.txt', 'cmake/**')}}
+          path: |
+            ${{github.workspace}}/build/_deps/*-build
+            ${{github.workspace}}/build/_deps/*-subbuild
+
+      - name: Patch OR-Tools
+        run: |
+          ls
+          cd or-tools
+          git apply ${{ github.workspace }}/patch.patch
+
+      - name: Create build and install dir
+        run: |
+          cmake -E make_directory ${{runner.workspace}}/installs
+
+      - name: Build OR-Tools
+        run: |
+          cd or-tools
+          pwd
+          cmake -S. -B build `
+          -G "${{matrix.cmake.generator}}" `
+          -DCMAKE_CONFIGURATION_TYPES=${{matrix.cmake.config}} `
+          -DBUILD_DEPS=ON `
+          -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/installs
+          cmake --build build -j2 --config Release
+          cmake --install build
+
+      - name: Test executable
+        run: |
+          cd or-tools
+          & ".\build\Release\bin\solve.exe" `
+          --solver=highs `
+          --input="${{ github.workspace }}/or-tools/ortools/math_opt/solver_tests/testdata/beavma.mps"
+
+      - name: Test HiGHS
+        run: |
+          cd or-tools
+          ./build/Release/bin/math_opt_solvers_highs_solver_test.exe
