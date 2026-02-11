@@ -1,13 +1,15 @@
 name: ortools-ubuntu
 
-# on: [push, pull_request]
-
 on:
-  push:
-    branches:
-      - ortools-c
-  pull_request:
   workflow_dispatch:
+
+# on: []
+# on:
+#   push:
+#     branches:
+#       - ortools-c
+#   pull_request:
+#   workflow_dispatch:
 
 concurrency:
   group: ${{github.workflow}}-${{github.ref}}

@@ -1,13 +1,14 @@
 name: ortools-win
 
+on:
+    workflow_dispatch:
 # on: [push, pull_request]
 
-on:
-  push:
-    branches:
-      - ortools
-  pull_request:
-  workflow_dispatch:
+# on:
+#   push:
+#     branches:
+#       - ortools
+#   pull_request:
 
 concurrency:
   group: ${{github.workflow}}-${{github.ref}}

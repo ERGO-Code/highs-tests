@@ -1,13 +1,15 @@
 name: ortools-macos
 
+on:
+    workflow_dispatch:
 # on: [push, pull_request]
 
-on:
-  push:
-    branches:
-      - ortools
-  pull_request:
-  workflow_dispatch:
+# on:
+#   push:
+#     branches:
+#       - ortools
+#   pull_request:
+#   workflow_dispatch:
 
 concurrency:
   group: ${{github.workflow}}-${{github.ref}}
