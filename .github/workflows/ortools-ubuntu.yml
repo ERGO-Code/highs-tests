@@ -5,7 +5,7 @@ name: ortools-ubuntu
 on:
   push:
     branches:
-      - ortools-c
+      - main
   pull_request:
   workflow_dispatch:
 
@@ -93,8 +93,10 @@ jobs:
           pwd
           cmake -S. -B build \
           -DBUILD_DEPS=ON \
+          -DUSE_SCIP=OFF \
+          -DUSE_COINOR=OFF \
           -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/installs
-          cmake --build build -v -j30
+          cmake --build build -v -j2
           cmake --install build
           ls
 
