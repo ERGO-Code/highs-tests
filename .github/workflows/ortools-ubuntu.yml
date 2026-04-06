@@ -1,7 +1,5 @@
 name: ortools-ubuntu
 
-# on: [push, pull_request]
-
 on:
   push:
     branches:
