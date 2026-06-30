@@ -133,6 +133,7 @@ jobs:
           -G "MinGW Makefiles"
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}\\install-highs-${{matrix.branch}}
+          -DHIPO=ON -DBUILD_OPENBLAS=ON
 
       - name: Build, ctest and install HiGHS
         working-directory: ${{runner.workspace}}\\build-highs-${{matrix.branch}}
@@ -149,7 +150,6 @@ jobs:
           -DCMAKE_BUILD_TYPE=Release
           -DHIGHS_DIR=${{runner.workspace}}\\install-highs-${{matrix.branch}}\\lib\\cmake\\highs
           -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}\\install-find-highs-${{matrix.branch}}
-          -DHIPO=ON -DBUILD_OPENBLAS=ON
 
       - name: Build and install CMakeFindHighsPackage
         working-directory: ${{runner.workspace}}\\build-find-highs-${{matrix.branch}}
