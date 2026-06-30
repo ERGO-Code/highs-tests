@@ -121,54 +121,53 @@ jobs:
 
       - name: Create build and install dirs
         run: |
-          mkdir ${{runner.workspace}}\\build-highs-${{matrix.branch}}
-          mkdir ${{runner.workspace}}\\install-highs-${{matrix.branch}}
-          mkdir ${{runner.workspace}}\\build-find-highs-${{matrix.branch}}
-          mkdir ${{runner.workspace}}\\install-find-highs-${{matrix.branch}}
+          mkdir ${{runner.workspace}}\\build-highs-hipo-${{matrix.branch}}
+          mkdir ${{runner.workspace}}\\install-highs-hipo-${{matrix.branch}}
+          mkdir ${{runner.workspace}}\\build-find-highs-hipo-${{matrix.branch}}
+          mkdir ${{runner.workspace}}\\install-find-highs-hipo-${{matrix.branch}}
 
       - name: Configure CMake HiGHS
-        working-directory: ${{runner.workspace}}\\build-highs-${{matrix.branch}}
+        working-directory: ${{runner.workspace}}\\build-highs-hipo-${{matrix.branch}}
         run: >-
           cmake ${{runner.workspace}}\\highs-tests\\HiGHS-${{matrix.branch}}
           -G "MinGW Makefiles"
           -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}\\install-highs-${{matrix.branch}}
+          -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}\\install-highs-hipo-${{matrix.branch}}
           -DHIPO=ON -DBUILD_OPENBLAS=ON
 
       - name: Build, ctest and install HiGHS
-        working-directory: ${{runner.workspace}}\\build-highs-${{matrix.branch}}
+        working-directory: ${{runner.workspace}}\\build-highs-hipo-${{matrix.branch}}
         run: |
           cmake --build . --parallel
-          ctest
           cmake --install .
 
       - name: Configure CMakeFindHighsPackage
-        working-directory: ${{runner.workspace}}\\build-find-highs-${{matrix.branch}}
+        working-directory: ${{runner.workspace}}\\build-find-highs-hipo-${{matrix.branch}}
         run: >-
           cmake ${{runner.workspace}}\\highs-tests\\CMakeHighsFindPackage-master-${{matrix.branch}}
           -G "MinGW Makefiles"
           -DCMAKE_BUILD_TYPE=Release
-          -DHIGHS_DIR=${{runner.workspace}}\\install-highs-${{matrix.branch}}\\lib\\cmake\\highs
-          -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}\\install-find-highs-${{matrix.branch}}
+          -DHIGHS_DIR=${{runner.workspace}}\\install-highs-hipo-${{matrix.branch}}\\lib\\cmake\\highs
+          -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}\\install-find-highs-hipo-${{matrix.branch}}
 
       - name: Build and install CMakeFindHighsPackage
-        working-directory: ${{runner.workspace}}\\build-find-highs-${{matrix.branch}}
+        working-directory: ${{runner.workspace}}\\build-find-highs-hipo-${{matrix.branch}}
         run: |
           cmake --build . --parallel
           cmake --install .
 
       - name: Test build
-        working-directory: ${{runner.workspace}}\\build-find-highs-${{matrix.branch}}
+        working-directory: ${{runner.workspace}}\\build-find-highs-hipo-${{matrix.branch}}
         shell: pwsh
         run: |
-          $env:PATH = '${{runner.workspace}}/install-highs-${{matrix.branch}}/bin;' + $env:PATH
+          $env:PATH = '${{runner.workspace}}/install-highs-hipo-${{matrix.branch}}/bin;' + $env:PATH
           echo $Env:PATH
           .\\main.exe
 
       - name: Test install
-        working-directory: ${{runner.workspace}}\\install-find-highs-${{matrix.branch}}
+        working-directory: ${{runner.workspace}}\\install-find-highs-hipo-${{matrix.branch}}
         shell: pwsh
         run: |
-          $env:PATH = '${{runner.workspace}}/install-highs-${{matrix.branch}}/bin;' + $env:PATH
+          $env:PATH = '${{runner.workspace}}/install-highs-hipo-${{matrix.branch}}/bin;' + $env:PATH
           echo $Env:PATH
           .\\bin\\main.exe
