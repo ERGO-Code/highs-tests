@@ -44,7 +44,7 @@ jobs:
         working-directory: ${{runner.workspace}}/build-highs-${{matrix.branch}}-b
         shell: bash
         run: |
-          cmake --build . --parallel 
+          cmake --build . -j2 
           ctest
 
       - name: Build CMakeFindHighsPackage
@@ -54,7 +54,7 @@ jobs:
           cmake ${{runner.workspace}}/highs-tests/CMakeHighsFindPackage-master-${{matrix.branch}}-b \
             -DHIGHS_DIR=${{runner.workspace}}/build-highs-${{matrix.branch}}-b \
             -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install-find-build-${{matrix.branch}}
-          cmake --build . --parallel 
+          cmake --build . -j2 
           cmake --install .
 
       - name: Test build
@@ -110,7 +110,7 @@ jobs:
         working-directory: ${{runner.workspace}}/build-highs-${{matrix.branch}}-b
         shell: bash
         run: |
-          cmake --build . --parallel 
+          cmake --build . -j2 
           ctest
 
       - name: Build CMakeFindHighsPackage
@@ -120,7 +120,7 @@ jobs:
           cmake ${{runner.workspace}}/highs-tests/CMakeHighsFindPackage-master-${{matrix.branch}}-b \
             -DHIGHS_DIR=${{runner.workspace}}/build-highs-${{matrix.branch}}-b \
             -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install-find-build-${{matrix.branch}}
-          cmake --build . --parallel 
+          cmake --build . -j2 
           cmake --install .
 
       - name: Test build

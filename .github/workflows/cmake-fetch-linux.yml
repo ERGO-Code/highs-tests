@@ -32,7 +32,7 @@ jobs:
           cmake ${{runner.workspace}}/highs-tests/CMakeHighsFetchContent-main-${{matrix.branch}} \
             -DBRANCH=${{matrix.branch}} \
             -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install-fetch-${{matrix.branch}}
-          cmake --build . --parallel 
+          cmake --build . -j2 
           cmake --install .
 
       - name: Test 
