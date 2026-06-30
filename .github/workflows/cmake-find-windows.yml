@@ -9,7 +9,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        branch: [master, latest]
+        branch: [master, latest, cmake-find-hipo]
 
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +38,7 @@ jobs:
       - name: Configure CMake HiGHS
         working-directory: ${{runner.workspace}}\\build-highs-${{matrix.branch}}
         run: >-
-          cmake ${{runner.workspace}}\\highs-tests\\HiGHS-${{matrix.branch}} 
+          cmake ${{runner.workspace}}\\highs-tests\\HiGHS-${{matrix.branch}}
           -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}\\install-highs-${{matrix.branch}}
 
       - name: Build, ctest and install HiGHS
@@ -51,8 +51,8 @@ jobs:
       - name: Configure CMakeFindHighsPackage
         working-directory: ${{runner.workspace}}\\build-find-highs-${{matrix.branch}}
         run: >-
-          cmake ${{runner.workspace}}\\highs-tests\\CMakeHighsFindPackage-master-${{matrix.branch}} 
-          -DHIGHS_DIR=${{runner.workspace}}\\install-highs-${{matrix.branch}}\\lib\\cmake\\highs 
+          cmake ${{runner.workspace}}\\highs-tests\\CMakeHighsFindPackage-master-${{matrix.branch}}
+          -DHIGHS_DIR=${{runner.workspace}}\\install-highs-${{matrix.branch}}\\lib\\cmake\\highs
           -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}\\install-find-highs-${{matrix.branch}}
 
       - name: Build and install CMakeFindHighsPackage
@@ -84,7 +84,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        branch: [master, latest]
+        branch: [master, latest, cmake-find-hipo]
 
     steps:
       - uses: actions/checkout@v4
@@ -113,7 +113,7 @@ jobs:
       - name: Configure CMake HiGHS
         working-directory: ${{runner.workspace}}\\build-highs-hipo-${{matrix.branch}}
         run: >-
-          cmake ${{runner.workspace}}\\highs-tests\\HiGHS-${{matrix.branch}} 
+          cmake ${{runner.workspace}}\\highs-tests\\HiGHS-${{matrix.branch}}
           -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}\\install-highs-hipo-${{matrix.branch}}
           -DHIPO=ON -DBUILD_OPENBLAS=ON
 
@@ -127,8 +127,8 @@ jobs:
       - name: Configure CMakeFindHighsPackage
         working-directory: ${{runner.workspace}}\\build-find-highs-hipo-${{matrix.branch}}
         run: >-
-          cmake ${{runner.workspace}}\\highs-tests\\CMakeHighsFindPackage-master-${{matrix.branch}} 
-          -DHIGHS_DIR=${{runner.workspace}}\\install-highs-hipo-${{matrix.branch}}\\lib\\cmake\\highs 
+          cmake ${{runner.workspace}}\\highs-tests\\CMakeHighsFindPackage-master-${{matrix.branch}}
+          -DHIGHS_DIR=${{runner.workspace}}\\install-highs-hipo-${{matrix.branch}}\\lib\\cmake\\highs
           -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}\\install-find-highs-hipo-${{matrix.branch}}
 
 
