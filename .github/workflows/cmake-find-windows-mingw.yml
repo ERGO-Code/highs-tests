@@ -99,11 +99,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up MinGW
+      - name: Set up MSYS2 with MinGW and OpenBLAS
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: mingw-w64-x86_64-openblas
+
+      - name: Add MinGW to PATH
         shell: pwsh
         run: |
-          choco install mingw --no-progress -y
-          "C:\ProgramData\mingw64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Checkout HiGHS repo
         uses: actions/checkout@v4
@@ -133,7 +139,8 @@ jobs:
           -G "MinGW Makefiles"
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}\\install-highs-hipo-${{matrix.branch}}
-          -DHIPO=ON -DBUILD_OPENBLAS=ON
+          -DHIPO=ON
+          -DBLAS_LIBRARIES=C:/msys64/mingw64/lib/libopenblas.dll.a
 
       - name: Build, ctest and install HiGHS
         working-directory: ${{runner.workspace}}\\build-highs-hipo-${{matrix.branch}}
