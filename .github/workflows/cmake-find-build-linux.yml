@@ -69,6 +69,7 @@ jobs:
         run: |
           LD_LIBRARY_PATH=${{runner.workspace}}/build-highs-${{matrix.branch}}-b/lib ./bin/main
 
+
   find_b_ubuntu_hipo:
     runs-on: ${{ matrix.os }}
     strategy:
