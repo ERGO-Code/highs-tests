@@ -1,2 +1,10 @@
-#todo
-on: []
+name: coverage
+
+# todo: placeholder, manual trigger only until the coverage job is written
+on: workflow_dispatch
+
+jobs:
+  todo:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "coverage workflow not implemented yet"
