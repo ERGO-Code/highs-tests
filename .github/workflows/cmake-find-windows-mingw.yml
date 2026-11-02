@@ -1,6 +1,16 @@
 name: cmake-find-windows-mingw
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  # HiGHS master/latest move independently of this repo.
+  schedule:
+    - cron: "0 3 * * 1" # Mondays
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   find_i_win:
@@ -9,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        branch: [master, latest, cmake-find-hipo]
+        branch: [master, latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -53,7 +63,7 @@ jobs:
         working-directory: ${{runner.workspace}}\\build-highs-${{matrix.branch}}
         run: |
           cmake --build . --parallel
-          ctest
+          ctest --output-on-failure --timeout 1800
           cmake --install .
 
       - name: Configure CMakeFindHighsPackage
@@ -94,22 +104,26 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        branch: [master, latest, cmake-find-hipo]
+        branch: [master, latest]
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up MSYS2 with MinGW and OpenBLAS
+        id: msys2
         uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
           update: true
-          install: mingw-w64-x86_64-openblas
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-make
+            mingw-w64-x86_64-openblas
 
       - name: Add MinGW to PATH
         shell: pwsh
         run: |
-          "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          "${{ steps.msys2.outputs.msys2-location }}\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Checkout HiGHS repo
         uses: actions/checkout@v4
@@ -140,7 +154,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}\\install-highs-hipo-${{matrix.branch}}
           -DHIPO=ON
-          -DBLAS_LIBRARIES=C:/msys64/mingw64/lib/libopenblas.dll.a
+          -DBLAS_LIBRARIES=${{ steps.msys2.outputs.msys2-location }}\\mingw64\\lib\\libopenblas.dll.a
 
       - name: Build, ctest and install HiGHS
         working-directory: ${{runner.workspace}}\\build-highs-hipo-${{matrix.branch}}

@@ -1,6 +1,16 @@
 name: cmake-find-macos
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  # HiGHS master/latest move independently of this repo.
+  schedule:
+    - cron: "0 3 * * 1" # Mondays
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   find_i_macos:
@@ -9,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        branch: [master, latest, cmake-find-hipo]
+        branch: [master, latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -47,7 +57,7 @@ jobs:
         shell: bash
         run: |
           cmake --build . --parallel 
-          ctest
+          ctest --output-on-failure --timeout 1800
           cmake --install .
 
       - name: Build CMakeFindHighsPackage
@@ -78,7 +88,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        branch: [master, latest, cmake-find-hipo]
+        branch: [master, latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -117,7 +127,7 @@ jobs:
         shell: bash
         run: |
           cmake --build . --parallel 
-          ctest
+          ctest --output-on-failure --timeout 1800
           cmake --install .
 
       - name: Build CMakeFindHighsPackage

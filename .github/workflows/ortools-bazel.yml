@@ -1,0 +1,92 @@
+name: ortools-bazel
+
+# OR-Tools (newest release tag) built with Bazel against HiGHS (latest branch),
+# via a local_path_override of the "highs" module. CPU only.
+on:
+  workflow_dispatch:
+    inputs:
+      ortools_ref:
+        description: OR-Tools ref (empty = newest release tag)
+        default: ""
+      highs_ref:
+        description: HiGHS ref
+        default: latest
+  schedule:
+    - cron: "0 2 * * 1" # Mondays
+  push:
+    branches: [main]
+    paths: [ortools/**, .github/workflows/ortools-bazel.yml]
+  pull_request:
+    paths: [ortools/**, .github/workflows/ortools-bazel.yml]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bazel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      ORTOOLS_REF: ${{ inputs.ortools_ref }}
+      HIGHS_REF: ${{ inputs.highs_ref || 'latest' }}
+      USE_BAZEL_VERSION: 8.x # OR-Tools 9.15 does not pin one; Bazel 9 is untested
+      # Only common flags here: query and mod reject build flags such as -c.
+      BAZEL_FLAGS: --check_direct_dependencies=off
+      AFIRO_OBJECTIVE: "-464.7531428571"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+
+      - name: Check out OR-Tools and HiGHS
+        run: ortools/prepare.sh ortools-work
+
+      - name: Check Bazel resolves highs to this HiGHS
+        working-directory: ${{ env.ORTOOLS_DIR }}
+        run: |
+          bazel version
+          bazel mod graph $BAZEL_FLAGS --depth=1 | tee mod-graph.txt
+          grep -q 'highs@_' mod-graph.txt
+
+      - name: Build
+        working-directory: ${{ env.ORTOOLS_DIR }}
+        run: >
+          bazel build $BAZEL_FLAGS -c opt
+          //highs_check //ortools/linear_solver:solve
+          //ortools/math_opt/solvers:highs_solver_test
+
+      - name: highs_check afiro (HiGHS defaults)
+        working-directory: ${{ env.ORTOOLS_DIR }}
+        run: >
+          python "$GITHUB_WORKSPACE/ortools/check_log.py"
+          --expect-objective "$AFIRO_OBJECTIVE"
+          --expect-highs-version "$HIGHS_VERSION"
+          -- bazel-bin/highs_check/highs_check "$HIGHS_DIR/check/instances/afiro.mps"
+
+      - name: highs_check afiro (solver=pdlp, CPU)
+        working-directory: ${{ env.ORTOOLS_DIR }}
+        run: >
+          python "$GITHUB_WORKSPACE/ortools/check_log.py"
+          --expect-objective "$AFIRO_OBJECTIVE"
+          --expect-text 'PDLP +iterations'
+          -- bazel-bin/highs_check/highs_check "$HIGHS_DIR/check/instances/afiro.mps" solver=pdlp
+
+      - name: solve afiro with HiGHS
+        working-directory: ${{ env.ORTOOLS_DIR }}
+        run: >
+          python "$GITHUB_WORKSPACE/ortools/check_log.py"
+          --expect-objective "$AFIRO_OBJECTIVE"
+          --expect-highs-version "$HIGHS_VERSION"
+          -- bazel-bin/ortools/linear_solver/solve --solver=highs
+          --input="$HIGHS_DIR/check/instances/afiro.mps"
+
+      - name: bazel test HiGHS tests
+        working-directory: ${{ env.ORTOOLS_DIR }}
+        run: |
+          tests="$(bazel query $BAZEL_FLAGS 'attr(name, "highs", tests(//ortools/...))')"
+          echo "$tests"
+          [ -n "$tests" ]
+          bazel test $BAZEL_FLAGS -c opt --test_output=errors $tests

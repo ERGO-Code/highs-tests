@@ -1,6 +1,16 @@
 name: cmake-find-windows
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  # HiGHS master/latest move independently of this repo.
+  schedule:
+    - cron: "0 3 * * 1" # Mondays
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   find_i_win:
@@ -9,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        branch: [master, latest, cmake-find-hipo]
+        branch: [master, latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -45,7 +55,7 @@ jobs:
         working-directory: ${{runner.workspace}}\\build-highs-${{matrix.branch}}
         run: |
           cmake --build . --parallel --config Release
-          ctest -C Release
+          ctest -C Release --output-on-failure --timeout 1800
           cmake --install .
 
       - name: Configure CMakeFindHighsPackage
@@ -84,7 +94,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        branch: [master, latest, cmake-find-hipo]
+        branch: [master, latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -121,7 +131,7 @@ jobs:
         working-directory: ${{runner.workspace}}\\build-highs-hipo-${{matrix.branch}}
         run: |
           cmake --build . --parallel --config Release
-          ctest -C Release
+          ctest -C Release --output-on-failure --timeout 1800
           cmake --install .
 
       - name: Configure CMakeFindHighsPackage

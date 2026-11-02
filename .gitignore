@@ -35,3 +35,6 @@
 dev.env 
 
 .vscode
+# OR-Tools + HiGHS checkouts and builds made by ortools/prepare.sh
+ortools-work/
+__pycache__/

@@ -1,6 +1,16 @@
 name: cmake-fetch-macos
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  # HiGHS master/latest move independently of this repo.
+  schedule:
+    - cron: "0 3 * * 1" # Mondays
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   fetch_macos:

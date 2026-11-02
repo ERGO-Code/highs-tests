@@ -1,6 +1,16 @@
 name: cmake-find-build-linux
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  # HiGHS master/latest move independently of this repo.
+  schedule:
+    - cron: "0 3 * * 1" # Mondays
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   find_b_ubuntu:
@@ -9,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        branch: [master, latest, cmake-find-hipo]
+        branch: [master, latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -45,8 +55,7 @@ jobs:
         shell: bash
         run: |
           cmake --build . -j2 
-          ctest
-
+          ctest --output-on-failure --timeout 1800
       - name: Build CMakeFindHighsPackage
         working-directory: ${{runner.workspace}}/build-find-build-${{matrix.branch}}
         shell: bash
@@ -76,7 +85,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        branch: [master, latest, cmake-find-hipo]
+        branch: [master, latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -112,8 +121,7 @@ jobs:
         shell: bash
         run: |
           cmake --build . -j2 
-          ctest
-
+          ctest --output-on-failure --timeout 1800
       - name: Build CMakeFindHighsPackage
         working-directory: ${{runner.workspace}}/build-find-build-hipo-${{matrix.branch}}
         shell: bash
