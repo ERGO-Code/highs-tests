@@ -76,7 +76,11 @@ jobs:
             --expect-highs-version "$HIGHS_VERSION" \
             -- "$solve" --solver=highs --input="$HIGHS_DIR/check/instances/afiro.mps"
 
-      - name: ctest HiGHS tests
-        run: >
-          ctest --test-dir ortools-work/build -C Release -R highs
-          --no-tests=error --output-on-failure --timeout 3600
+      # OR-Tools disables this test in CTest on all systems ("fail on windows and
+      # takes too long"), so ctest cannot run it. Same working folder as its add_test.
+      # shortcut: Linux only, add Windows when OR-Tools says the test passes there
+      - name: HiGHS solver test
+        if: runner.os == 'Linux'
+        working-directory: ${{ env.ORTOOLS_DIR }}
+        timeout-minutes: 60
+        run: '"$GITHUB_WORKSPACE/ortools-work/build/bin/math_opt_solvers_highs_solver_test"'
