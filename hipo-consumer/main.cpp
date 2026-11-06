@@ -5,13 +5,13 @@
 
 int main(int argc, char** argv) {
   Highs highs;
-  if (argc != 2 || highs.readModel(argv[1]) != HighsStatus::kOk) {
+  if (argc != 3 || highs.readModel(argv[1]) != HighsStatus::kOk) {
     printf("FAIL: could not read the model\n");
     return 1;
   }
   highs.setOptionValue("presolve", "off");
-  if (highs.setOptionValue("solver", "hipo") != HighsStatus::kOk) {
-    printf("FAIL: solver=hipo was rejected\n");
+  if (highs.setOptionValue("solver", argv[2]) != HighsStatus::kOk) {
+    printf("FAIL: solver=%s was rejected\n", argv[2]);
     return 1;
   }
   const HighsStatus status = highs.run();
@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
   if (status != HighsStatus::kOk || info.ipm_iteration_count <= 0 ||
       highs.getModelStatus() != HighsModelStatus::kOptimal ||
       std::fabs(info.objective_function_value + 464.7531428) >= 1e-5) {
-    printf("FAIL: HiPO did not produce the expected solution\n");
+    printf("FAIL: %s did not produce the expected solution\n", argv[2]);
     return 1;
   }
   return 0;

@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Builds HiGHS with HiPO for one BLAS setup, then checks that an application can
-# use it in each supported way. Prints one result line per way.
+# use it in each supported way. Prints one result line per way. With blas=none,
+# builds HiGHS without HiPO and checks only that pkg-config finds a working HiGHS.
 #
 # usage: run.sh <highs-source> <work-dir> <blas> <extras> [<libs>]
-#   blas:   bundled | bundled-msvc | system | generic | blas-libraries
+#   blas:   none | bundled | bundled-msvc | system | generic | blas-libraries
 #   extras: shared | static (BUILD_SHARED_EXTRAS_LIB)
 #   libs:   static | shared (BUILD_SHARED_LIBS, default static)
 # JOBS: build jobs, default 4. A bare --parallel is unlimited with make.
@@ -27,7 +28,13 @@ esac
 common=(-DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release)
 blas_args=()
 consumer_args=()
+hipo=ON
+solver=hipo
 case "$blas" in
+  none)
+    hipo=OFF
+    solver=ipm
+    ;;
   # Fails, rather than silently testing the same as bundled-msvc, without clang-cl
   bundled) blas_args=(-DBUILD_OPENBLAS=ON -DHIGHS_OPENBLAS_REQUIRE_OPTIMIZED=ON) ;;
   bundled-msvc) blas_args=(-DBUILD_OPENBLAS=ON -DBUILD_OPENBLAS_CLANG_CL=OFF) ;;
@@ -53,7 +60,7 @@ case "$blas" in
 esac
 [ "$extras" = shared ] && extras_on=ON || extras_on=OFF
 [ "$libs" = shared ] && libs_on=ON || libs_on=OFF
-options=(-DHIPO=ON "-DBUILD_SHARED_EXTRAS_LIB=$extras_on" "-DBUILD_SHARED_LIBS=$libs_on" "${common[@]}" "${blas_args[@]}")
+options=("-DHIPO=$hipo" "-DBUILD_SHARED_EXTRAS_LIB=$extras_on" "-DBUILD_SHARED_LIBS=$libs_on" "${common[@]}" "${blas_args[@]}")
 
 failed=0
 report() { # mode outcome detail
@@ -67,7 +74,7 @@ report() { # mode outcome detail
 
 first_error() {
   # "-- " lines are CMake status, such as an optional package not being found
-  { grep -v -E '^-- |warning' "$1" | grep -E "Could NOT find|^ +[A-Za-z_]+::[A-Za-z_]+$|LNK[0-9]+:|undefined reference|error:|FAIL:|unavailable|cannot open shared"
+  { grep -v -E '^-- |warning' "$1" | grep -E "Could NOT find|cannot find|^ +[A-Za-z_]+::[A-Za-z_]+$|LNK[0-9]+:|undefined reference|error:|FAIL:|unavailable|cannot open shared"
     tail -n 1 "$1"; } | head -n 1 | cut -c1-160
 }
 
@@ -91,7 +98,7 @@ try() { # mode folder-with-shared-libraries configure-args...
   # The search path is the only way to locate a shared library next to a static
   # HiGHS. A shared HiGHS must locate it by itself, except for DLLs on Windows.
   [ -z "$windows" ] && [ "$libs" = shared ] && runtime=
-  if PATH="$runtime:$PATH" LD_LIBRARY_PATH="$runtime" DYLD_LIBRARY_PATH="$runtime" "$exe" "$model" >> "$log" 2>&1; then
+  if PATH="$runtime:$PATH" LD_LIBRARY_PATH="$runtime" DYLD_LIBRARY_PATH="$runtime" "$exe" "$model" "$solver" >> "$log" 2>&1; then
     report "$mode" PASS "$(grep -m1 ipm_iterations "$log")"
   else
     report "$mode" FAIL "run: $(first_error "$log")"
@@ -100,12 +107,22 @@ try() { # mode folder-with-shared-libraries configure-args...
 
 build="$work/highs-build"
 prefix="$work/highs-install"
+# The none setup leaves its install here, and a static run could link its shared library
+rm -rf "$prefix"
 if ! { cmake -S "$src" -B "$build" "${options[@]}" "-DCMAKE_INSTALL_PREFIX=$prefix" \
   && cmake --build "$build" --config Release --parallel "${JOBS:-4}" \
   && cmake --install "$build" --config Release; } > "$work/highs.log" 2>&1; then
   report highs FAIL "$(first_error "$work/highs.log")"
   exit 1
 fi
+
+# Before the install moves: highs.pc holds absolute paths. Found only through
+# PKG_CONFIG_PATH, since the prefix is outside the default search path.
+# shortcut: system BLAS on Linux only, add other systems when someone links HiPO through pkg-config there
+if [ "$blas" = none ] || { [ "$blas" = system ] && [ "$(uname -s)" = Linux ]; }; then
+  PKG_CONFIG_PATH=$(dirname "$(find "$prefix" -name highs.pc)") try pkgconfig "$prefix" -DHIGHS_PKGCONFIG=ON
+fi
+[ "$blas" = none ] && exit "$failed"
 
 try install "$prefix" "-DCMAKE_PREFIX_PATH=$prefix"
 

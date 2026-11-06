@@ -1,7 +1,8 @@
 name: hipo-consumer
 
 # Checks that an application can use HiPO for each way of providing BLAS and each
-# way of consuming HiGHS. Run it by hand before each release.
+# way of consuming HiGHS, and that pkg-config finds a HiGHS without HiPO. Run it
+# by hand before each release.
 on:
   push:
     branches: [main]
@@ -15,7 +16,7 @@ on:
   workflow_dispatch:
     inputs:
       highs_refs:
-        description: JSON list of HiGHS refs to test, default latest and win-dll-lookup
+        description: JSON list of HiGHS refs to test, default latest and patches-to-1.15.1
   # HiGHS moves independently of this repo.
   schedule:
     - cron: "0 3 * * 1" # Mondays
@@ -31,8 +32,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        highs_ref: ${{ fromJSON(inputs.highs_refs || '["latest", "win-dll-lookup"]') }}
+        highs_ref: ${{ fromJSON(inputs.highs_refs || '["latest", "patches-to-1.15.1"]') }}
         setup:
+          - { os: ubuntu-latest, blas: none, extras: shared, libs: static }
+          - { os: ubuntu-latest, blas: none, extras: shared, libs: shared }
           - { os: ubuntu-latest, blas: bundled, extras: shared, libs: static }
           - { os: ubuntu-latest, blas: bundled, extras: static, libs: static }
           - { os: ubuntu-latest, blas: bundled, extras: shared, libs: shared }
@@ -62,12 +65,19 @@ jobs:
           ref: ${{ matrix.highs_ref }}
           path: highs
 
-      # Not for bundled: a system BLAS could stand in for a broken install
+      # Not for bundled or none: a system BLAS could stand in for a broken install
       - name: Install BLAS (Linux)
-        if: runner.os == 'Linux' && matrix.setup.blas != 'bundled'
+        if: runner.os == 'Linux' && matrix.setup.blas != 'bundled' && matrix.setup.blas != 'none'
         run: |
           sudo apt-get update
           sudo apt-get install -y libopenblas-dev libblas-dev
+
+      # Static libhighs needs zlib.pc, and the system openblas.pc links -lgfortran
+      - name: Install pkg-config (Linux)
+        if: runner.os == 'Linux' && (matrix.setup.blas == 'none' || matrix.setup.blas == 'system')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config zlib1g-dev ${{ matrix.setup.blas == 'system' && 'gfortran' || '' }}
 
       - name: Install BLAS (Windows)
         if: runner.os == 'Windows' && matrix.setup.blas == 'system'
