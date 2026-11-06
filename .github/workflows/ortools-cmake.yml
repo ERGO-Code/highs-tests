@@ -48,7 +48,7 @@ jobs:
         run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
 
       - name: Check out OR-Tools and HiGHS
-        run: ortools/prepare.sh ortools-work
+        run: bash ortools/prepare.sh ortools-work
 
       - name: Configure OR-Tools with this HiGHS
         run: >
@@ -69,7 +69,8 @@ jobs:
 
       - name: solve afiro with HiGHS
         run: |
-          solve="$(ls ortools-work/build/bin/solve ortools-work/build/Release/bin/solve.exe 2>/dev/null | head -n 1)"
+          solve=ortools-work/build/bin/solve
+          [ -x "$solve" ] || solve=ortools-work/build/Release/bin/solve.exe
           python ortools/check_log.py \
             --expect-objective "$AFIRO_OBJECTIVE" \
             --expect-highs-version "$HIGHS_VERSION" \

@@ -62,7 +62,7 @@ jobs:
       - name: Build, ctest and install HiGHS
         working-directory: ${{runner.workspace}}\\build-highs-${{matrix.branch}}
         run: |
-          cmake --build . --parallel
+          cmake --build . --parallel 4
           ctest --output-on-failure --timeout 1800
           cmake --install .
 
@@ -78,7 +78,7 @@ jobs:
       - name: Build and install CMakeFindHighsPackage
         working-directory: ${{runner.workspace}}\\build-find-highs-${{matrix.branch}}
         run: |
-          cmake --build . --parallel
+          cmake --build . --parallel 4
           cmake --install .
 
       - name: Test build
@@ -124,6 +124,9 @@ jobs:
         shell: pwsh
         run: |
           "${{ steps.msys2.outputs.msys2-location }}\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          # Forward slashes: gcc response files treat backslashes as escapes
+          $blas = "${{ steps.msys2.outputs.msys2-location }}\mingw64\lib\libopenblas.dll.a".Replace('\', '/')
+          "MINGW_BLAS=$blas" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Checkout HiGHS repo
         uses: actions/checkout@v4
@@ -154,12 +157,12 @@ jobs:
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}\\install-highs-hipo-${{matrix.branch}}
           -DHIPO=ON
-          -DBLAS_LIBRARIES=${{ steps.msys2.outputs.msys2-location }}\\mingw64\\lib\\libopenblas.dll.a
+          -DBLAS_LIBRARIES=${{ env.MINGW_BLAS }}
 
       - name: Build, ctest and install HiGHS
         working-directory: ${{runner.workspace}}\\build-highs-hipo-${{matrix.branch}}
         run: |
-          cmake --build . --parallel
+          cmake --build . --parallel 4
           cmake --install .
 
       - name: Configure CMakeFindHighsPackage
@@ -170,11 +173,12 @@ jobs:
           -DCMAKE_BUILD_TYPE=Release
           -DHIGHS_DIR=${{runner.workspace}}\\install-highs-hipo-${{matrix.branch}}\\lib\\cmake\\highs
           -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}\\install-find-highs-hipo-${{matrix.branch}}
+          -DBLAS_LIBRARIES=${{ env.MINGW_BLAS }}
 
       - name: Build and install CMakeFindHighsPackage
         working-directory: ${{runner.workspace}}\\build-find-highs-hipo-${{matrix.branch}}
         run: |
-          cmake --build . --parallel
+          cmake --build . --parallel 4
           cmake --install .
 
       - name: Test build
