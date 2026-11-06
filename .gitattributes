@@ -1,0 +1,2 @@
+# Run by bash on Windows runners, where git would otherwise check out CRLF
+hipo-consumer/** text eol=lf

@@ -1,0 +1,89 @@
+name: hipo-consumer
+
+# Checks that an application can use HiPO for each way of providing BLAS and each
+# way of consuming HiGHS. Run it by hand before each release.
+on:
+  push:
+    branches: [main]
+    paths:
+      - hipo-consumer/**
+      - .github/workflows/hipo-consumer.yml
+  pull_request:
+    paths:
+      - hipo-consumer/**
+      - .github/workflows/hipo-consumer.yml
+  workflow_dispatch:
+    inputs:
+      highs_refs:
+        description: JSON list of HiGHS refs to test, default latest and win-dll-lookup
+  # HiGHS moves independently of this repo.
+  schedule:
+    - cron: "0 3 * * 1" # Mondays
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  consumer:
+    name: ${{ matrix.highs_ref }} ${{ matrix.setup.os }} ${{ matrix.setup.blas }} extras=${{ matrix.setup.extras }} libs=${{ matrix.setup.libs }}
+    runs-on: ${{ matrix.setup.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        highs_ref: ${{ fromJSON(inputs.highs_refs || '["latest", "win-dll-lookup"]') }}
+        setup:
+          - { os: ubuntu-latest, blas: bundled, extras: shared, libs: static }
+          - { os: ubuntu-latest, blas: bundled, extras: static, libs: static }
+          - { os: ubuntu-latest, blas: bundled, extras: shared, libs: shared }
+          - { os: ubuntu-latest, blas: system, extras: shared, libs: static }
+          - { os: ubuntu-latest, blas: system, extras: static, libs: static }
+          - { os: ubuntu-latest, blas: system, extras: shared, libs: shared }
+          - { os: ubuntu-latest, blas: system, extras: static, libs: shared }
+          - { os: ubuntu-latest, blas: generic, extras: static, libs: static }
+          - { os: ubuntu-latest, blas: blas-libraries, extras: static, libs: static }
+          - { os: windows-latest, blas: bundled, extras: shared, libs: static }
+          - { os: windows-latest, blas: bundled, extras: static, libs: static }
+          - { os: windows-latest, blas: bundled, extras: shared, libs: shared }
+          - { os: windows-latest, blas: bundled-msvc, extras: shared, libs: static }
+          - { os: windows-latest, blas: bundled-msvc, extras: static, libs: static }
+          - { os: windows-latest, blas: system, extras: shared, libs: static }
+          - { os: windows-latest, blas: system, extras: static, libs: static }
+          - { os: macos-latest, blas: system, extras: shared, libs: static }
+          - { os: macos-latest, blas: system, extras: static, libs: static }
+          - { os: macos-latest, blas: system, extras: shared, libs: shared }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: ERGO-Code/HiGHS
+          ref: ${{ matrix.highs_ref }}
+          path: highs
+
+      # Not for bundled: a system BLAS could stand in for a broken install
+      - name: Install BLAS (Linux)
+        if: runner.os == 'Linux' && matrix.setup.blas != 'bundled'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libopenblas-dev libblas-dev
+
+      - name: Install BLAS (Windows)
+        if: runner.os == 'Windows' && matrix.setup.blas == 'system'
+        run: vcpkg install "openblas[threads]:x64-windows-static"
+
+      - name: Build HiGHS and run the consumer in each mode
+        shell: bash
+        run: |
+          expected="hipo-consumer/expected-failures/${{ matrix.highs_ref }}-${{ runner.os }}.txt"
+          [ -f "$expected" ] && export EXPECTED_FAILURES="$PWD/$expected"
+          [ "$RUNNER_OS" = Windows ] && export VCPKG_ROOT="$(cygpath -m "$VCPKG_INSTALLATION_ROOT")"
+          bash hipo-consumer/run.sh highs "$RUNNER_TEMP/hipo" \
+            ${{ matrix.setup.blas }} ${{ matrix.setup.extras }} ${{ matrix.setup.libs }}
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: logs-${{ matrix.highs_ref }}-${{ matrix.setup.os }}-${{ matrix.setup.blas }}-${{ matrix.setup.extras }}-${{ matrix.setup.libs }}
+          path: ${{ runner.temp }}/hipo/*.log
