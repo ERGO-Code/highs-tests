@@ -22,3 +22,35 @@ Repository for tests of HiGHS during development and for releases.
 - [or-tools-readme.md](or-tools-readme.md): commands for testing OR-Tools with
   the HiGHS GPU solver by hand (Bazel and CMake/`HIGHS_GPU_LIB`, Linux and
   Windows). Notes are in [gpu-interfaces/](gpu-interfaces/README.md).
+
+## Triggering the tests from a PR
+
+A PR to `main` runs these workflows:
+
+- `cmake-*` and `extra-unit-tests`: always.
+- `hipo-consumer`: when the PR changes `hipo-consumer/**` or its workflow file.
+- `ortools-cmake`, `ortools-bazel`: when the PR changes `ortools/**` or that
+  workflow's own file.
+
+To run all of them, open a draft PR that also changes a file in `hipo-consumer/`
+and in `ortools/`, such as a comment, then close it without merging:
+
+```bash
+git switch -c test-all
+echo "# trigger CI" >> hipo-consumer/run.sh
+echo "# trigger CI" >> ortools/prepare.sh
+git commit -am "Trigger all CI" && git push -u origin test-all
+gh pr create --base main --draft --fill
+```
+
+A PR tests the default HiGHS refs (`master`, `latest` and `patches-to-1.15.1`,
+depending on the workflow). To test another HiGHS branch, run a workflow by hand:
+
+```bash
+gh workflow run hipo-consumer.yml -f highs_refs='["my-branch"]'
+gh workflow run ortools-cmake.yml -f highs_ref=my-branch
+gh workflow run ortools-bazel.yml -f highs_ref=my-branch
+```
+
+The `cmake-*` workflows and `extra-unit-tests` have their HiGHS refs hard-coded,
+so testing another branch with them means editing their workflow files.
