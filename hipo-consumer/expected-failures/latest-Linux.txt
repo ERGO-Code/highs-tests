@@ -1,3 +1,0 @@
-none shared static pkgconfig
-system shared static pkgconfig
-system static static pkgconfig

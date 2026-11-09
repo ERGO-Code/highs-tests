@@ -43,7 +43,7 @@ git commit -am "Trigger all CI" && git push -u origin test-all
 gh pr create --base main --draft --fill
 ```
 
-A PR tests the default HiGHS refs (`master`, `latest` and `patches-to-1.15.1`,
+A PR tests the default HiGHS refs (`master` and `latest`,
 depending on the workflow). To test another HiGHS branch, run a workflow by hand:
 
 ```bash

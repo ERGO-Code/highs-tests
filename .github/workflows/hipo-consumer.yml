@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
     inputs:
       highs_refs:
-        description: JSON list of HiGHS refs to test, default latest and patches-to-1.15.1
+        description: JSON list of HiGHS refs to test, default latest and master
   # HiGHS moves independently of this repo.
   schedule:
     - cron: "0 3 * * 1" # Mondays
@@ -32,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        highs_ref: ${{ fromJSON(inputs.highs_refs || '["latest", "patches-to-1.15.1"]') }}
+        highs_ref: ${{ fromJSON(inputs.highs_refs || '["latest", "master"]') }}
         setup:
           - { os: ubuntu-latest, blas: none, extras: shared, libs: static }
           - { os: ubuntu-latest, blas: none, extras: shared, libs: shared }
