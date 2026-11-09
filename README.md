@@ -54,3 +54,4 @@ gh workflow run ortools-bazel.yml -f highs_ref=my-branch
 
 The `cmake-*` workflows and `extra-unit-tests` have their HiGHS refs hard-coded,
 so testing another branch with them means editing their workflow files.
+
