@@ -98,6 +98,12 @@ try() { # mode folder-with-shared-libraries configure-args...
   # The search path is the only way to locate a shared library next to a static
   # HiGHS. A shared HiGHS must locate it by itself, except for DLLs on Windows.
   [ -z "$windows" ] && [ "$libs" = shared ] && runtime=
+  # Windows HiGHS loads highs_extras.dll only from the folder of the .exe, not
+  # PATH, so, as its docs say, an application ships the DLLs next to its .exe
+  if [ -n "$windows" ] && [ -n "$library" ]; then
+    [ "$runtime" -ef "$(dirname "$exe")" ] || cp "$runtime"/*.dll "$(dirname "$exe")/"
+    runtime=
+  fi
   if PATH="$runtime:$PATH" LD_LIBRARY_PATH="$runtime" DYLD_LIBRARY_PATH="$runtime" "$exe" "$model" "$solver" >> "$log" 2>&1; then
     report "$mode" PASS "$(grep -m1 ipm_iterations "$log")"
   else
