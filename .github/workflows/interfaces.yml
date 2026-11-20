@@ -1,9 +1,9 @@
 name: interfaces
 
-# Interface tests that HiGHS's own CI runs only on pull requests, run here on any
-# HiGHS ref: highspy next to OR-Tools in one process, and the Highs.Native NuGet
-# package used from a new .NET project. The steps follow HiGHS's
-# test-python-ortools.yml and test-nuget-*.yml.
+# Interface tests that HiGHS's own CI runs only on pull requests or some branches,
+# run here on any HiGHS ref: highspy next to OR-Tools in one process, the Highs.Native NuGet
+# package used from a new .NET project, and the Rust highs-sys crate. The steps follow HiGHS's
+# test-python-ortools.yml, test-nuget-*.yml and rust-tests.yml.
 on:
   workflow_dispatch:
     inputs:
@@ -94,3 +94,41 @@ jobs:
           cp ../examples/call_highs_from_csharp.cs .
           dotnet add package Highs.Native -v "$VERSION" -s "$FEED"
           dotnet run
+
+  # As HiGHS's rust-tests.yml, which runs only on latest, master and PRs
+  rust:
+    name: Rust highs-sys (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - name: Install LLVM and Clang (bindgen needs libclang)
+        if: runner.os == 'Windows'
+        uses: KyleMayes/install-llvm-action@v1.9.0
+        with:
+          version: "17"
+          directory: ${{ runner.temp }}/llvm
+
+      - name: Set LIBCLANG_PATH
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
+
+      - uses: actions/checkout@v4
+        with:
+          repository: rust-or/highs-sys
+          path: highs-sys
+
+      # This HiGHS where highs-sys expects its submodule
+      - uses: actions/checkout@v4
+        with:
+          repository: ERGO-Code/HiGHS
+          ref: ${{ env.HIGHS_REF }}
+          path: highs-sys/HiGHS
+
+      - run: rustup update stable # 1.14.0 needed a newer stable
+      - working-directory: highs-sys
+        run: cargo test

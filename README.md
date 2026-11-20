@@ -17,6 +17,19 @@ below, so to run one of them alone, use `gh workflow run <file> -f ...`.
 
 ## Workflows
 
+- `.github/workflows/smoke.yml`: release gate G1 from `test-build`. For each
+  build variant, configure, build, `ctest`, then solve afiro, 25fv47, egout and
+  flugpl with every LP solver and MIP root-LP solver, checking the objective and
+  that the requested solver really ran (`scripts/smoke_unix.sh`,
+  `scripts/smoke_windows.ps1`). Linux: default, hipo, debug, static, warnings
+  (gcc-14), bazel. macOS: default, hipo, debug, fortran, x86_64 (Rosetta),
+  bazel. Windows: default, hipo and hipo-shared (in-tree OpenBLAS by clang-cl),
+  hipo-vcpkg-clang. Plus an `alpine:edge` (musl) build and ctest (HiGHS#3000).
+- `.github/workflows/release-checks.yml`: G0, every HiGHS CI run on the commit
+  is green, which fails otherwise. G5 reports in the run summary, for review: the
+  version strings and HConfig templates against the last release
+  (`scripts/version_bump_check.sh`), and the options diff against the last
+  release's highspy (`scripts/dump_options.py`).
 - `.github/workflows/cmake-*`: HiGHS `master` and `latest` consumed through
   CMake `find_package` and `FetchContent`. HiPO is covered here only for MinGW.
 - `.github/workflows/hipo-consumer.yml`: builds
@@ -36,29 +49,42 @@ below, so to run one of them alone, use `gh workflow run <file> -f ...`.
 - `.github/workflows/packagers.yml`: HiGHS built with the recipes that
   downstream packagers use, fetched from their repos, with only the source
   swapped for the HiGHS ref (`packagers/use_highs_source.py`):
-  - vcpkg port `highs` and `highs[extras]` on Linux and Windows, then
+  - vcpkg port `highs` and `highs[extras]` on Linux and Windows, and
+    `highs:x64-windows-static`. The installed `highs` solves afiro, then
     `find_package(highs)` from `hipo-consumer/`. The port's patches are applied
     first: one that no longer applies fails the job, and one already in HiGHS
     is reported so the port can drop it.
-  - conda-forge `highs` and `highspy` feedstocks, built and tested with
-    `rattler-build` on Linux.
-  - Homebrew `highs` formula, `brew install` and `brew test` on macOS.
+  - conda-forge `highs` feedstock on Linux, macOS (arm64) and Windows, and
+    `highspy` on Linux, built and tested with `rattler-build`.
+  - Homebrew `highs` formula: `brew install`, `brew test` and
+    `brew linkage --test` on macOS.
+  - conan-center `highs` recipe, `conan create` with cppstd 17 and 20, which
+    also runs its `test_package`.
   - nixpkgs (`nixos-unstable`) with its `highs` built from the HiGHS ref
     (`packagers/nixpkgs.nix`), then `highs` and the nixpkgs packages that use
     it, each with its own checks: highspy, qpsolvers, cvxpy, sleqp, casadi and
     or-tools.
-
 - `.github/workflows/interfaces.yml`: interface tests that HiGHS's CI runs
-  only on pull requests: highspy and OR-Tools in one process (Linux, macOS,
-  Windows), and the `Highs.Native` NuGet package used from a new .NET project
-  (Linux, Windows, macOS). HiGHS's CI covers HiGHS.jl, Rust and Fortran on push.
+  only on pull requests or some branches: highspy and OR-Tools in one process,
+  the `Highs.Native` NuGet package used from a new .NET project, and the Rust
+  `highs-sys` crate with its HiGHS submodule replaced by the ref, each on Linux,
+  macOS and Windows. HiGHS's CI covers HiGHS.jl and Fortran on push.
 - [or-tools-readme.md](or-tools-readme.md): commands for testing OR-Tools with
   the HiGHS GPU solver by hand (Bazel and CMake/`HIGHS_GPU_LIB`, Linux and
   Windows). Notes are in [gpu-interfaces/](gpu-interfaces/README.md).
 
+The `scripts/smoke_*`, `version_bump_check.sh` and `dump_options.py` scripts
+are copies of `galabovaa/test-build` `scripts/` at 30bed1d. That repo is
+private, so CI cannot check it out. When one copy changes, copy it to the other.
+
+Not run here: the regression campaigns (`test-runtimes`, timed on highs01 and
+highs02), GPU builds, and the G4 packaging checks, which download HiGHS CI
+artifacts (TestPyPI wheels, NuGet preview, `release-cpack`) and would need a
+token with access to them.
+
 ## Triggering the tests from a PR
 
-A PR to `main` runs `cmake-*` and `extra-unit-tests` always, and `hipo-consumer`,
-`ortools-*`, `packagers` and `interfaces` when it changes their folder or workflow file. To
+A PR to `main` runs `cmake-*` and `extra-unit-tests` always, and the others
+when it changes their scripts or workflow file. To
 test a PR's workflow changes against all of them, run `pre-release.yml` on the
 PR branch: `gh workflow run pre-release.yml --ref <branch> -f highs_ref=latest`.

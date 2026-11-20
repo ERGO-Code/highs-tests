@@ -1,0 +1,123 @@
+name: smoke
+
+# Release gate G1 from test-build: for each build variant, configure, build,
+# ctest, then solve LP and MIP instances with every solver and check that the
+# requested solver really ran (scripts/smoke_unix.sh, scripts/smoke_windows.ps1).
+# Plus the alpine:edge (musl, FORTIFY) build that broke in 1.14.0 (HiGHS#3000).
+on:
+  workflow_dispatch:
+    inputs:
+      highs_ref:
+        description: HiGHS ref
+        default: latest
+  # pre-release.yml calls this, and runs it weekly
+  workflow_call:
+    inputs:
+      highs_ref:
+        type: string
+        default: latest
+  push:
+    branches: [main]
+    paths: [scripts/smoke_*, .github/workflows/smoke.yml]
+  pull_request:
+    paths: [scripts/smoke_*, .github/workflows/smoke.yml]
+
+concurrency:
+  group: smoke-${{ github.ref }}-${{ github.event_name }}-${{ inputs.highs_ref }}
+  cancel-in-progress: true
+
+env:
+  HIGHS_REF: ${{ inputs.highs_ref || 'latest' }}
+
+jobs:
+  unix:
+    name: ${{ matrix.os }} ${{ matrix.variant }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, variant: default }
+          - { os: ubuntu-latest, variant: hipo }
+          - { os: ubuntu-latest, variant: debug }
+          - { os: ubuntu-latest, variant: static }
+          - { os: ubuntu-latest, variant: warnings }
+          - { os: ubuntu-latest, variant: bazel }
+          - { os: macos-latest, variant: default }
+          - { os: macos-latest, variant: hipo }
+          - { os: macos-latest, variant: debug }
+          - { os: macos-latest, variant: fortran }
+          - { os: macos-latest, variant: x86_64 }
+          - { os: macos-latest, variant: bazel }
+    env:
+      WORK: ${{ github.workspace }}/smoke
+    steps:
+      - uses: actions/checkout@v4
+
+      # hipo and debug build HiPO, which needs BLAS on Linux; warnings uses gcc-14
+      - name: Install BLAS and gcc-14 (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libopenblas-dev gcc-14 g++-14
+
+      - uses: fortran-lang/setup-fortran@v1
+        if: matrix.variant == 'fortran'
+        with:
+          compiler: gcc
+
+      - run: bash scripts/smoke_unix.sh "$HIGHS_REF" ${{ matrix.variant }}
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-${{ matrix.os }}-${{ matrix.variant }}
+          path: smoke/results
+
+  windows:
+    name: windows ${{ matrix.variant }}
+    runs-on: windows-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [default, hipo, hipo-shared, hipo-vcpkg-clang]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # The hipo variants build OpenBLAS with clang-cl and ninja
+      - name: clang-cl and ninja on PATH
+        run: |
+          python -m pip install ninja
+          "C:\Program Files\LLVM\bin" | Out-File -Append $env:GITHUB_PATH
+
+      - run: >
+          ./scripts/smoke_windows.ps1 -Ref $env:HIGHS_REF -Variants ${{ matrix.variant }}
+          -Work "$env:GITHUB_WORKSPACE\smoke" -Vcpkg $env:VCPKG_INSTALLATION_ROOT
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-windows-${{ matrix.variant }}
+          path: smoke/results
+
+  alpine:
+    name: alpine:edge (musl)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ERGO-Code/HiGHS
+          ref: ${{ env.HIGHS_REF }}
+
+      # As the Dockerfile in HiGHS#3000: default build, install, ctest
+      - run: >
+          docker run --rm -v "$PWD:/src" -w /src alpine:edge sh -ec '
+          apk add --no-cache git build-base linux-headers cmake;
+          cmake -S . -B build;
+          cmake --build build --parallel 4;
+          cmake --install build;
+          ctest --test-dir build --output-on-failure --timeout 1200'

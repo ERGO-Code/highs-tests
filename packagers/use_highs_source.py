@@ -3,6 +3,7 @@
   use_highs_source.py vcpkg    <port dir>     <HiGHS dir>
   use_highs_source.py conda    <recipe.yaml>  <HiGHS dir>
   use_highs_source.py homebrew <formula.rb>   <HiGHS .tar.gz>
+  use_highs_source.py conan    <conandata.yml> <HiGHS .tar.gz> <version> <url it is served at>
 
 For vcpkg, the port's patches are applied to the HiGHS dir first, as vcpkg
 would. A patch that no longer applies fails the run, since the next port update
@@ -73,6 +74,14 @@ def homebrew(formula, tarball):
     formula.write_text(text)
 
 
+def conan(conandata, tarball, version, url):
+    # Only "sources" is replaced: patches here would need applying like vcpkg's
+    if re.search(r"^(?!sources:)\w", conandata.read_text(), re.M):
+        sys.exit(f"{conandata} has more than sources: handle it before testing")
+    sha = hashlib.sha256(tarball.read_bytes()).hexdigest()
+    conandata.write_text(f'sources:\n  "{version}":\n    url: "{url}"\n    sha256: "{sha}"\n')
+
+
 if __name__ == "__main__":
-    kind, recipe, source = sys.argv[1], pathlib.Path(sys.argv[2]), pathlib.Path(sys.argv[3])
-    {"vcpkg": vcpkg, "conda": conda, "homebrew": homebrew}[kind](recipe, source)
+    kind, recipe, source, *extra = sys.argv[1], pathlib.Path(sys.argv[2]), pathlib.Path(sys.argv[3]), *sys.argv[4:]
+    {"vcpkg": vcpkg, "conda": conda, "homebrew": homebrew, "conan": conan}[kind](recipe, source, *extra)

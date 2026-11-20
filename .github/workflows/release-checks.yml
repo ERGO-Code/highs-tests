@@ -1,0 +1,115 @@
+name: release-checks
+
+# Release checks from test-build that need no build matrix:
+# - G0: every HiGHS CI run on the commit of the ref is green (fails otherwise).
+# - G5 reports, for review in the run summary (never fail): version strings and
+#   HConfig templates against the last release (scripts/version_bump_check.sh), and
+#   the options added, removed or changed since the last release (scripts/dump_options.py).
+on:
+  workflow_dispatch:
+    inputs:
+      highs_ref:
+        description: HiGHS ref (branch, tag or SHA)
+        default: latest
+  # pre-release.yml calls this, and runs it weekly
+  workflow_call:
+    inputs:
+      highs_ref:
+        type: string
+        default: latest
+  push:
+    branches: [main]
+    paths: [scripts/version_bump_check.sh, scripts/dump_options.py, .github/workflows/release-checks.yml]
+  pull_request:
+    paths: [scripts/version_bump_check.sh, scripts/dump_options.py, .github/workflows/release-checks.yml]
+
+concurrency:
+  group: release-checks-${{ github.ref }}-${{ github.event_name }}-${{ inputs.highs_ref }}
+  cancel-in-progress: true
+
+env:
+  HIGHS_REF: ${{ inputs.highs_ref || 'latest' }}
+  GH_TOKEN: ${{ github.token }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  highs-ci:
+    name: HiGHS CI green on this commit (G0)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Runs of ERGO-Code/HiGHS on the commit
+        run: |
+          sha=$(gh api "repos/ERGO-Code/HiGHS/commits/$HIGHS_REF" --jq .sha)
+          gh run list -R ERGO-Code/HiGHS --commit "$sha" --limit 300 \
+            --json workflowName,status,conclusion,url > runs.json
+          python3 - "$sha" <<'PY'
+          import json, os, sys
+          sha, runs = sys.argv[1], json.load(open("runs.json"))
+          ok = {"success", "skipped", "neutral"}
+          bad = [r for r in runs if r["status"] != "completed" or r["conclusion"] not in ok]
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
+              f.write(f"### HiGHS CI on {sha[:10]} ({os.environ['HIGHS_REF']}): "
+                      f"{len(runs) - len(bad)} of {len(runs)} runs green\n\n")
+              for r in sorted(bad, key=lambda r: r["workflowName"]):
+                  f.write(f"- [{r['workflowName']}]({r['url']}): {r['conclusion'] or r['status']}\n")
+          if not runs:
+              sys.exit("::error::no HiGHS CI runs on this commit: push it to a branch or open a draft PR")
+          for r in bad:
+              print(f"::error::{r['workflowName']}: {r['conclusion'] or r['status']} {r['url']}")
+          if any(r["status"] != "completed" for r in bad):
+              print("::warning::some HiGHS runs have not finished: rerun this job when they have")
+          sys.exit(1 if bad else 0)
+          PY
+
+  version:
+    name: Version strings and HConfig (G5 report)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: ERGO-Code/HiGHS
+          ref: ${{ env.HIGHS_REF }}
+          path: highs
+          fetch-depth: 0 # the script diffs against the last release tag
+
+      - name: version_bump_check.sh against the last release
+        run: |
+          old=$(gh release view -R ERGO-Code/HiGHS --json tagName --jq .tagName | sed 's/^v//')
+          new=$(awk -F= '/^HIGHS_(MAJOR|MINOR|PATCH)=/ {v = v (v ? "." : "") $2} END {print v}' highs/Version.txt)
+          # A report, not a gate: its exit status means nothing
+          { bash scripts/version_bump_check.sh highs "$old" "$new" || true; } | tee report.txt
+          { echo "### Version check, last release $old, this ref $new"; echo '```'; cat report.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+  options:
+    name: Options diff against the last release (G5 report)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: ERGO-Code/HiGHS
+          ref: ${{ env.HIGHS_REF }}
+          path: highs
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dump the options of the last release and of this ref
+        run: |
+          old=$(gh release view -R ERGO-Code/HiGHS --json tagName --jq .tagName | sed 's/^v//')
+          python -m venv base && base/bin/pip install -q "highspy==$old"
+          python -m venv new && new/bin/pip install -q ./highs
+          base/bin/python scripts/dump_options.py > opts_base.txt
+          new/bin/python scripts/dump_options.py > opts_new.txt
+          diff opts_base.txt opts_new.txt > opts.diff || true
+          { echo "### Options: highspy $old vs this ref ($(grep -c '^[<>]' opts.diff || true) lines changed)"
+            echo 'Every added or removed option and changed default must be intended and in the release notes.'
+            echo '```diff'; sed 's/^</-/; s/^>/+/' opts.diff | grep '^[-+]' || true; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          cat opts.diff

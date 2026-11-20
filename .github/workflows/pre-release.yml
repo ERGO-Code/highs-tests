@@ -104,3 +104,13 @@ jobs:
     uses: ./.github/workflows/interfaces.yml
     with:
       highs_ref: ${{ needs.ref.outputs.highs_ref }}
+  smoke:
+    needs: ref
+    uses: ./.github/workflows/smoke.yml
+    with:
+      highs_ref: ${{ needs.ref.outputs.highs_ref }}
+  release-checks:
+    needs: ref
+    uses: ./.github/workflows/release-checks.yml
+    with:
+      highs_ref: ${{ needs.ref.outputs.highs_ref }}
