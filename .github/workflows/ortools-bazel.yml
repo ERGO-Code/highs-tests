@@ -29,7 +29,10 @@ concurrency:
 
 jobs:
   bazel:
-    runs-on: ubuntu-latest
+    # Not ubuntu-latest (26.04): the SCIP that OR-Tools 9.15 builds has a
+    # tinycthread.h whose pthread_once_t clashes with glibc there. Move up when
+    # an OR-Tools release builds on 26.04.
+    runs-on: ubuntu-24.04
     timeout-minutes: 360
     env:
       ORTOOLS_REF: ${{ inputs.ortools_ref }}
