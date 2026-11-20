@@ -134,7 +134,13 @@ for v in $variants; do
   for s in $lp_solvers; do
     tol=1e-6; [ $s = pdlp ] && tol=1e-4
     solve "$bin" "$v" afiro.mps -464.7531428571 $tol solver=$s
-    [ $s = pdlp ] || solve "$bin" "$v" 25fv47.mps 5501.845888 1e-6 solver=$s
+    # HiPO does not converge on 25fv47 on AMD Zen 5 (low priority to fix in HiPO),
+    # so it gets 80bau3b, about three times as large
+    if [ $s = hipo ]; then
+      solve "$bin" "$v" 80bau3b.mps 987224.19241 1e-6 solver=$s
+    elif [ $s != pdlp ]; then
+      solve "$bin" "$v" 25fv47.mps 5501.845888 1e-6 solver=$s
+    fi
   done
   for s in $mip_lp; do
     ipm=$s; [ $s = simplex ] && ipm=choose

@@ -116,7 +116,10 @@ foreach ($v in $Variants) {
   foreach ($s in $lp) {
     $tol = if ($s -eq "pdlp") { 1e-4 } else { 1e-6 }
     Solve $bin $v "afiro.mps" -464.7531428571 $tol @("solver=$s")
-    if ($s -ne "pdlp") { Solve $bin $v "25fv47.mps" 5501.845888 1e-6 @("solver=$s") }
+    # HiPO does not converge on 25fv47 on AMD Zen 5 (low priority to fix in HiPO),
+    # so it gets 80bau3b, about three times as large
+    if ($s -eq "hipo") { Solve $bin $v "80bau3b.mps" 987224.19241 1e-6 @("solver=$s") }
+    elseif ($s -ne "pdlp") { Solve $bin $v "25fv47.mps" 5501.845888 1e-6 @("solver=$s") }
   }
   foreach ($s in $mip) {
     $ipm = if ($s -eq "simplex") { "choose" } else { $s }

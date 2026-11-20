@@ -38,3 +38,4 @@ dev.env
 # OR-Tools + HiGHS checkouts and builds made by ortools/prepare.sh
 ortools-work/
 __pycache__/
+Highs.log
