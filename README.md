@@ -43,6 +43,10 @@ below, so to run one of them alone, use `gh workflow run <file> -f ...`.
   - conda-forge `highs` and `highspy` feedstocks, built and tested with
     `rattler-build` on Linux.
   - Homebrew `highs` formula, `brew install` and `brew test` on macOS.
+  - nixpkgs (`nixos-unstable`) with its `highs` built from the HiGHS ref
+    (`packagers/nixpkgs.nix`), then `highs` and the nixpkgs packages that use
+    it, each with its own checks: highspy, qpsolvers, cvxpy, sleqp, casadi and
+    or-tools.
 
 - `.github/workflows/interfaces.yml`: interface tests that HiGHS's CI runs
   only on pull requests: highspy and OR-Tools in one process (Linux, macOS,

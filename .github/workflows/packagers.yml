@@ -1,8 +1,9 @@
 name: packagers
 
-# Builds a HiGHS ref with the recipes that vcpkg, conda-forge and Homebrew use
-# for their next release, and runs the packager's own tests. Each recipe is
-# fetched from its upstream repo; only the source is swapped for the HiGHS ref.
+# Builds a HiGHS ref with the recipes that vcpkg, conda-forge, Homebrew and
+# nixpkgs use for their next release, and runs the packager's own tests. Each
+# recipe is fetched from its upstream repo; only the source is swapped for the
+# HiGHS ref.
 on:
   workflow_dispatch:
     inputs:
@@ -142,3 +143,39 @@ jobs:
         run: |
           brew install --build-from-source --verbose local/highs-test/highs
           brew test --verbose local/highs-test/highs
+
+  # Same packages as HiGHS's nix-deps.yml, which only runs by hand on HiGHS itself
+  nixpkgs:
+    name: nixpkgs ${{ matrix.package }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 360 # or-tools and casadi build from source against this HiGHS
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - highs
+          - python3Packages.highspy
+          - python3Packages.qpsolvers
+          - python3Packages.cvxpy
+          - sleqp
+          - casadi
+          - or-tools
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: ERGO-Code/HiGHS
+          ref: ${{ env.HIGHS_REF }}
+          path: highs
+
+      - uses: cachix/install-nix-action@v27
+        with:
+          extra_nix_config: experimental-features = nix-command flakes
+
+      - name: nix build ${{ matrix.package }} (runs its nixpkgs checks)
+        run: >
+          nix build --print-build-logs --no-link --impure
+          -f packagers/nixpkgs.nix
+          --argstr highsSrc "$PWD/highs"
+          --argstr package "${{ matrix.package }}"
