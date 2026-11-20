@@ -114,7 +114,8 @@ jobs:
           # One variant, as conda-forge CI uses: the newest CPython for highspy
           variant="$(ls feedstock/.ci_support/linux_64_*.yaml | grep -v 't\.yaml$' | sort -V | tail -1)"
           echo "variant: $variant"
-          ./rattler-build build --recipe feedstock/recipe -m "$variant" -c conda-forge --output-dir conda-out
+          # The variant sets channel_sources, so no -c: rattler-build rejects both
+          ./rattler-build build --recipe feedstock/recipe -m "$variant" --output-dir conda-out
 
   homebrew:
     runs-on: macos-latest
