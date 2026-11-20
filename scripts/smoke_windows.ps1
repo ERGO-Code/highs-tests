@@ -8,10 +8,10 @@
 # (needs clang-cl + ninja on PATH; configure fails rather than using generic kernels).
 # hipo-shared: same with BUILD_SHARED_LIBS=ON (OpenBLAS linked statically into highs.dll).
 # hipo-vcpkg needs:  vcpkg install openblas[threads]:x64-windows-static
-# hipo-vcpkg-clang: OpenBLAS + zlib built with clang-cl by vcpkg, using the triplet documented in
-#   docs/src/installation.md ("Windows: OpenBLAS from vcpkg, built with clang-cl"; x64, dynamic, all ports),
-#   written by HiGHS' .github/scripts/vcpkg_clang_cl_triplet.py and installed into $Work\vcpkg-clang-installed
-#   (does not touch $Vcpkg\installed). First run builds OpenBLAS, ~15 min.
+# hipo-vcpkg-clang: OpenBLAS + zlib built with clang-cl by vcpkg, as in HiGHS docs/src/installation.md
+#   ("Windows: OpenBLAS from vcpkg, built with clang-cl"): the x64-windows-static-clang triplet that HiGHS
+#   ships in cmake/vcpkg-triplets, installed into $Work\vcpkg-clang-installed (does not touch
+#   $Vcpkg\installed). First run builds OpenBLAS, ~15 min.
 # Every hipo variant also fails if HiPO hands an LP over to IPX (non-thread-safe OpenBLAS).
 # gpu needs the CUDA toolkit (CUPDLP_GPU=ON).
 # Logs and summary go to $env:USERPROFILE\release-smoke\results\<sha>\. Never pushes or commits.
@@ -74,20 +74,20 @@ foreach ($v in $Variants) {
   if ($v -in @("hipo", "hipo-shared")) { $flags += @("-DHIPO=ON", "-DBUILD_OPENBLAS=ON", "-DHIGHS_OPENBLAS_REQUIRE_OPTIMIZED=ON") }
   if ($v -eq "hipo-shared") { $flags += "-DBUILD_SHARED_LIBS=ON" }
   if ($v -eq "hipo-vcpkg-clang") {
-    $trip = "$Work\vcpkg-clang-triplets"; $vinst = "$Work\vcpkg-clang-installed"
-    python -I .github\scripts\vcpkg_clang_cl_triplet.py x64 dynamic all-ports $trip *> "$out\$v-triplet.log"
-    if ($LASTEXITCODE) { Fail "$v triplet from docs log=$out\$v-triplet.log"; continue }
-    & "$Vcpkg\vcpkg.exe" install "openblas[threads]:x64-windows-clang" "zlib:x64-windows-clang" --overlay-triplets=$trip `
-      --host-triplet=x64-windows-clang --x-install-root=$vinst *> "$out\$v-vcpkg.log"
+    $trip = "$PWD\cmake\vcpkg-triplets"; $vinst = "$Work\vcpkg-clang-installed"; $t = "x64-windows-static-clang"
+    if (-not (Test-Path "$trip\$t.cmake")) { Fail "$v no $t triplet in cmake\vcpkg-triplets"; continue }
+    & "$Vcpkg\vcpkg.exe" install "openblas[threads]:$t" "zlib:$t" --overlay-triplets=$trip `
+      --host-triplet=$t --x-install-root=$vinst *> "$out\$v-vcpkg.log"
     if ($LASTEXITCODE) { Fail "$v vcpkg install log=$out\$v-vcpkg.log"; continue }
     # vcpkg keeps each port's configure output, which names the compiler.
     foreach ($port in "openblas", "zlib") {
-      $cl = Get-ChildItem "$Vcpkg\buildtrees\$port" -Filter "config-x64-windows-clang-out.log" -ErrorAction SilentlyContinue | Select-Object -First 1
+      $cl = Get-ChildItem "$Vcpkg\buildtrees\$port" -Filter "config-$t-out.log" -ErrorAction SilentlyContinue | Select-Object -First 1
       $id = if ($cl) { Capture (Get-Content $cl.FullName) "The C compiler identification is (.*)$" }
       if ($id -match "^Clang") { Pass "$v $port built with $id" } else { Fail "$v $port compiler '$id' (expected clang-cl)" }
     }
-    $flags += @("-DHIPO=ON", "-DCMAKE_TOOLCHAIN_FILE=$Vcpkg\scripts\buildsystems\vcpkg.cmake", "-DVCPKG_TARGET_TRIPLET=x64-windows-clang",
-                "-DVCPKG_OVERLAY_TRIPLETS=$trip", "-DVCPKG_INSTALLED_DIR=$vinst", "-DVCPKG_MANIFEST_MODE=OFF")
+    $flags += @("-DHIPO=ON", "-DCMAKE_TOOLCHAIN_FILE=$Vcpkg\scripts\buildsystems\vcpkg.cmake", "-DVCPKG_TARGET_TRIPLET=$t",
+                "-DVCPKG_OVERLAY_TRIPLETS=$trip", "-DVCPKG_INSTALLED_DIR=$vinst", "-DVCPKG_MANIFEST_MODE=OFF",
+                "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded")
   }
   if ($v -eq "hipo-vcpkg") { $flags += @("-DHIPO=ON", "-DCMAKE_TOOLCHAIN_FILE=$Vcpkg\scripts\buildsystems\vcpkg.cmake", "-DVCPKG_TARGET_TRIPLET=x64-windows-static", "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded") }
   if ($v -eq "gpu")  { $flags += @("-DCUPDLP_GPU=ON") }
@@ -98,7 +98,7 @@ foreach ($v in $Variants) {
     if ($cfg | Select-String "Building OpenBLAS .* with .*clang-cl") { Pass "$v OpenBLAS built with clang-cl" } else { Fail "$v OpenBLAS not built with clang-cl" }
   }
   if ($v -eq "hipo-vcpkg-clang") {
-    if ($cfg | Select-String "OpenBLAS CMake config path: .*x64-windows-clang") { Pass "$v uses vcpkg x64-windows-clang OpenBLAS" } else { Fail "$v did not use OpenBLAS from x64-windows-clang" }
+    if ($cfg | Select-String "OpenBLAS CMake config path: .*x64-windows-static-clang") { Pass "$v uses vcpkg x64-windows-static-clang OpenBLAS" } else { Fail "$v did not use OpenBLAS from x64-windows-static-clang" }
   }
   cmake --build $b --parallel --config Release *> "$out\$v-build.log"; if ($LASTEXITCODE) { Fail "$v build"; continue }
   # In-tree OpenBLAS (hipo) emits ~1.6k warnings; count them apart so HiGHS ones stay visible.

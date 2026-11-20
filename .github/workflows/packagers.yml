@@ -76,7 +76,9 @@ jobs:
 
       - name: The installed highs executable solves afiro
         run: |
-          highs=$(ls vcpkg/installed/*/tools/highs/highs vcpkg/installed/*/tools/highs/highs.exe 2>/dev/null | head -1)
+          for highs in vcpkg/installed/*/tools/highs/highs vcpkg/installed/*/tools/highs/highs.exe; do
+            [ -f "$highs" ] && break
+          done
           "$highs" highs/check/instances/afiro.mps | tee afiro.log
           grep -q "Model status *: *Optimal" afiro.log
 
