@@ -2,10 +2,24 @@
 
 Repository for tests of HiGHS during development and for releases.
 
+## Before a release
+
+Run every downstream test against one HiGHS ref:
+
+```bash
+gh workflow run pre-release.yml -f highs_ref=latest
+gh run watch   # or open the Actions tab
+```
+
+`highs_ref` can be any branch, tag or SHA in `ERGO-Code/HiGHS`. The same run
+happens every Monday on `latest` and on `master`. `pre-release.yml` only calls the workflows
+below, so to run one of them alone, use `gh workflow run <file> -f ...`.
+
+## Workflows
+
 - `.github/workflows/cmake-*`: HiGHS `master` and `latest` consumed through
   CMake `find_package` and `FetchContent`. HiPO is covered here only for MinGW.
-  These also run weekly, since HiGHS changes independently of this repo.
-- `.github/workflows/hipo-consumer.yml`: **run before each release.** Builds
+- `.github/workflows/hipo-consumer.yml`: builds
   HiGHS with HiPO for each way of providing BLAS, and checks that an application
   really runs HiPO through an install, a moved install, the build tree and a
   subproject. On Linux it also uses pkg-config, for HiPO with the system
@@ -19,39 +33,28 @@ Repository for tests of HiGHS during development and for releases.
 - `.github/workflows/ortools-cmake.yml`, `ortools-bazel.yml`: the newest
   OR-Tools release built against HiGHS `latest` (CPU). Scripts live in
   `ortools/`.
+- `.github/workflows/packagers.yml`: HiGHS built with the recipes that
+  downstream packagers use, fetched from their repos, with only the source
+  swapped for the HiGHS ref (`packagers/use_highs_source.py`):
+  - vcpkg port `highs` and `highs[extras]` on Linux and Windows, then
+    `find_package(highs)` from `hipo-consumer/`. The port's patches are applied
+    first: one that no longer applies fails the job, and one already in HiGHS
+    is reported so the port can drop it.
+  - conda-forge `highs` and `highspy` feedstocks, built and tested with
+    `rattler-build` on Linux.
+  - Homebrew `highs` formula, `brew install` and `brew test` on macOS.
+
+- `.github/workflows/interfaces.yml`: interface tests that HiGHS's CI runs
+  only on pull requests: highspy and OR-Tools in one process (Linux, macOS,
+  Windows), and the `Highs.Native` NuGet package used from a new .NET project
+  (Linux, Windows, macOS). HiGHS's CI covers HiGHS.jl, Rust and Fortran on push.
 - [or-tools-readme.md](or-tools-readme.md): commands for testing OR-Tools with
   the HiGHS GPU solver by hand (Bazel and CMake/`HIGHS_GPU_LIB`, Linux and
   Windows). Notes are in [gpu-interfaces/](gpu-interfaces/README.md).
 
 ## Triggering the tests from a PR
 
-A PR to `main` runs these workflows:
-
-- `cmake-*` and `extra-unit-tests`: always.
-- `hipo-consumer`: when the PR changes `hipo-consumer/**` or its workflow file.
-- `ortools-cmake`, `ortools-bazel`: when the PR changes `ortools/**` or that
-  workflow's own file.
-
-To run all of them, open a draft PR that also changes a file in `hipo-consumer/`
-and in `ortools/`, such as a comment, then close it without merging:
-
-```bash
-git switch -c test-all
-echo "# trigger CI" >> hipo-consumer/run.sh
-echo "# trigger CI" >> ortools/prepare.sh
-git commit -am "Trigger all CI" && git push -u origin test-all
-gh pr create --base main --draft --fill
-```
-
-A PR tests the default HiGHS refs (`master` and `latest`,
-depending on the workflow). To test another HiGHS branch, run a workflow by hand:
-
-```bash
-gh workflow run hipo-consumer.yml -f highs_refs='["my-branch"]'
-gh workflow run ortools-cmake.yml -f highs_ref=my-branch
-gh workflow run ortools-bazel.yml -f highs_ref=my-branch
-```
-
-The `cmake-*` workflows and `extra-unit-tests` have their HiGHS refs hard-coded,
-so testing another branch with them means editing their workflow files.
-
+A PR to `main` runs `cmake-*` and `extra-unit-tests` always, and `hipo-consumer`,
+`ortools-*`, `packagers` and `interfaces` when it changes their folder or workflow file. To
+test a PR's workflow changes against all of them, run `pre-release.yml` on the
+PR branch: `gh workflow run pre-release.yml --ref <branch> -f highs_ref=latest`.

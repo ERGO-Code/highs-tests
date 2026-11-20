@@ -1,8 +1,8 @@
 name: hipo-consumer
 
 # Checks that an application can use HiPO for each way of providing BLAS and each
-# way of consuming HiGHS, and that pkg-config finds a HiGHS without HiPO. Run it
-# by hand before each release.
+# way of consuming HiGHS, and that pkg-config finds a HiGHS without HiPO.
+# pre-release.yml runs it before each release.
 on:
   push:
     branches: [main]
@@ -17,12 +17,14 @@ on:
     inputs:
       highs_refs:
         description: JSON list of HiGHS refs to test, default latest and master
-  # HiGHS moves independently of this repo.
-  schedule:
-    - cron: "0 3 * * 1" # Mondays
+  # pre-release.yml calls this, and runs it weekly
+  workflow_call:
+    inputs:
+      highs_refs:
+        type: string
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  group: hipo-consumer-${{ github.ref }}-${{ github.event_name }}-${{ inputs.highs_refs }}
   cancel-in-progress: true
 
 jobs:

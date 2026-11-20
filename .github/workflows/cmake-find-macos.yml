@@ -4,12 +4,19 @@ on:
   push:
   pull_request:
   workflow_dispatch:
-  # HiGHS master/latest move independently of this repo.
-  schedule:
-    - cron: "0 3 * * 1" # Mondays
+    inputs:
+      highs_refs:
+        description: JSON list of HiGHS refs to test
+        default: '["master", "latest"]'
+  # pre-release.yml calls this, and runs it weekly
+  workflow_call:
+    inputs:
+      highs_refs:
+        type: string
+        default: '["master", "latest"]'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: cmake-find-macos-${{ github.ref }}-${{ github.event_name }}-${{ inputs.highs_refs }}
   cancel-in-progress: true
 
 jobs:
@@ -19,7 +26,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        branch: [master, latest]
+        branch: ${{ fromJSON(inputs.highs_refs || '["master", "latest"]') }}
 
     steps:
       - uses: actions/checkout@v4

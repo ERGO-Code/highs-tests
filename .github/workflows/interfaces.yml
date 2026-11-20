@@ -1,0 +1,96 @@
+name: interfaces
+
+# Interface tests that HiGHS's own CI runs only on pull requests, run here on any
+# HiGHS ref: highspy next to OR-Tools in one process, and the Highs.Native NuGet
+# package used from a new .NET project. The steps follow HiGHS's
+# test-python-ortools.yml and test-nuget-*.yml.
+on:
+  workflow_dispatch:
+    inputs:
+      highs_ref:
+        description: HiGHS ref
+        default: latest
+  # pre-release.yml calls this, and runs it weekly
+  workflow_call:
+    inputs:
+      highs_ref:
+        type: string
+        default: latest
+  push:
+    branches: [main]
+    paths: [.github/workflows/interfaces.yml]
+  pull_request:
+    paths: [.github/workflows/interfaces.yml]
+
+concurrency:
+  group: interfaces-${{ github.ref }}-${{ github.event_name }}-${{ inputs.highs_ref }}
+  cancel-in-progress: true
+
+env:
+  HIGHS_REF: ${{ inputs.highs_ref || 'latest' }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  highspy-ortools:
+    name: highspy + OR-Tools (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-2022]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ERGO-Code/HiGHS
+          ref: ${{ env.HIGHS_REF }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Same pin as HiGHS: this OR-Tools bundles a libhighs with the same name as
+      # highspy's, which is the clash the test is for (HiGHS #3538).
+      - run: python -m pip install pytest ortools==9.15.6755
+      - run: python -m pip install .
+      - run: pytest -v highspy/tests/test_ortools.py
+
+  nuget:
+    name: NuGet (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    env:
+      FEED: ${{ github.workspace }}/nugets
+      VERSION: 0.0.0-prerelease
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ERGO-Code/HiGHS
+          ref: ${{ env.HIGHS_REF }}
+
+      - name: Build HiGHS with the .NET wrapper
+        run: |
+          cmake -S . -B build -DCSHARP=ON -DBUILD_DOTNET=ON
+          cmake --build build --config Release --parallel
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Pack Highs.Native into a local feed
+        working-directory: build/dotnet/Highs.Native
+        run: dotnet pack -c Release -p:Version="$VERSION" -o "$FEED"
+
+      - name: New console project using the package
+        run: |
+          mkdir test_nuget && cd test_nuget
+          dotnet new console
+          rm Program.cs
+          cp ../examples/call_highs_from_csharp.cs .
+          dotnet add package Highs.Native -v "$VERSION" -s "$FEED"
+          dotnet run

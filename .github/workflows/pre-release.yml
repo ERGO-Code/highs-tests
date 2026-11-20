@@ -1,0 +1,106 @@
+name: pre-release
+
+# Every downstream test against one HiGHS ref. Run before a release:
+#   gh workflow run pre-release.yml -f highs_ref=latest
+# Also runs weekly on latest and on master, since HiGHS changes independently
+# of this repo.
+on:
+  workflow_dispatch:
+    inputs:
+      highs_ref:
+        description: HiGHS ref (branch, tag or SHA)
+        default: latest
+  schedule:
+    - cron: "0 2 * * 1" # Mondays, latest
+    - cron: "0 5 * * 1" # Mondays, master
+
+run-name: pre-release ${{ inputs.highs_ref || (github.event.schedule == '0 5 * * 1' && 'master') || 'latest' }}
+
+jobs:
+  # A schedule cannot pass inputs, so the ref comes from the cron that fired
+  ref:
+    runs-on: ubuntu-latest
+    outputs:
+      highs_ref: ${{ inputs.highs_ref || (github.event.schedule == '0 5 * * 1' && 'master') || 'latest' }}
+    steps:
+      - run: 'true'
+  cmake-fetch-linux:
+    needs: ref
+    uses: ./.github/workflows/cmake-fetch-linux.yml
+    with:
+      highs_refs: ${{ format('["{0}"]', needs.ref.outputs.highs_ref) }}
+  cmake-fetch-macos:
+    needs: ref
+    uses: ./.github/workflows/cmake-fetch-macos.yml
+    with:
+      highs_refs: ${{ format('["{0}"]', needs.ref.outputs.highs_ref) }}
+  cmake-fetch-windows:
+    needs: ref
+    uses: ./.github/workflows/cmake-fetch-windows.yml
+    with:
+      highs_refs: ${{ format('["{0}"]', needs.ref.outputs.highs_ref) }}
+  cmake-find-linux:
+    needs: ref
+    uses: ./.github/workflows/cmake-find-linux.yml
+    with:
+      highs_refs: ${{ format('["{0}"]', needs.ref.outputs.highs_ref) }}
+  cmake-find-macos:
+    needs: ref
+    uses: ./.github/workflows/cmake-find-macos.yml
+    with:
+      highs_refs: ${{ format('["{0}"]', needs.ref.outputs.highs_ref) }}
+  cmake-find-windows:
+    needs: ref
+    uses: ./.github/workflows/cmake-find-windows.yml
+    with:
+      highs_refs: ${{ format('["{0}"]', needs.ref.outputs.highs_ref) }}
+  cmake-find-windows-mingw:
+    needs: ref
+    uses: ./.github/workflows/cmake-find-windows-mingw.yml
+    with:
+      highs_refs: ${{ format('["{0}"]', needs.ref.outputs.highs_ref) }}
+  cmake-find-build-linux:
+    needs: ref
+    uses: ./.github/workflows/cmake-find-build-linux.yml
+    with:
+      highs_refs: ${{ format('["{0}"]', needs.ref.outputs.highs_ref) }}
+  cmake-find-build-macos:
+    needs: ref
+    uses: ./.github/workflows/cmake-find-build-macos.yml
+    with:
+      highs_refs: ${{ format('["{0}"]', needs.ref.outputs.highs_ref) }}
+  cmake-find-build-windows:
+    needs: ref
+    uses: ./.github/workflows/cmake-find-build-windows.yml
+    with:
+      highs_refs: ${{ format('["{0}"]', needs.ref.outputs.highs_ref) }}
+  hipo-consumer:
+    needs: ref
+    uses: ./.github/workflows/hipo-consumer.yml
+    with:
+      highs_refs: ${{ format('["{0}"]', needs.ref.outputs.highs_ref) }}
+  extra-unit-tests:
+    needs: ref
+    uses: ./.github/workflows/extra-unit-tests.yml
+    with:
+      highs_ref: ${{ needs.ref.outputs.highs_ref }}
+  ortools-cmake:
+    needs: ref
+    uses: ./.github/workflows/ortools-cmake.yml
+    with:
+      highs_ref: ${{ needs.ref.outputs.highs_ref }}
+  ortools-bazel:
+    needs: ref
+    uses: ./.github/workflows/ortools-bazel.yml
+    with:
+      highs_ref: ${{ needs.ref.outputs.highs_ref }}
+  packagers:
+    needs: ref
+    uses: ./.github/workflows/packagers.yml
+    with:
+      highs_ref: ${{ needs.ref.outputs.highs_ref }}
+  interfaces:
+    needs: ref
+    uses: ./.github/workflows/interfaces.yml
+    with:
+      highs_ref: ${{ needs.ref.outputs.highs_ref }}

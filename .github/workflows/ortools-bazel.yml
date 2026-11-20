@@ -11,8 +11,12 @@ on:
       highs_ref:
         description: HiGHS ref
         default: latest
-  schedule:
-    - cron: "0 2 * * 1" # Mondays
+  # pre-release.yml calls this, and runs it weekly
+  workflow_call:
+    inputs:
+      highs_ref:
+        type: string
+        default: latest
   push:
     branches: [main]
     paths: [ortools/**, .github/workflows/ortools-bazel.yml]
@@ -20,7 +24,7 @@ on:
     paths: [ortools/**, .github/workflows/ortools-bazel.yml]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ortools-bazel-${{ github.ref }}-${{ github.event_name }}-${{ inputs.highs_ref }}
   cancel-in-progress: true
 
 jobs:

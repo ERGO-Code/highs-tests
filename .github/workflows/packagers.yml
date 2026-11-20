@@ -1,0 +1,143 @@
+name: packagers
+
+# Builds a HiGHS ref with the recipes that vcpkg, conda-forge and Homebrew use
+# for their next release, and runs the packager's own tests. Each recipe is
+# fetched from its upstream repo; only the source is swapped for the HiGHS ref.
+on:
+  workflow_dispatch:
+    inputs:
+      highs_ref:
+        description: HiGHS ref
+        default: latest
+  # pre-release.yml calls this, and runs it weekly
+  workflow_call:
+    inputs:
+      highs_ref:
+        type: string
+        default: latest
+  push:
+    branches: [main]
+    paths: [packagers/**, .github/workflows/packagers.yml]
+  pull_request:
+    paths: [packagers/**, .github/workflows/packagers.yml]
+
+concurrency:
+  group: packagers-${{ github.ref }}-${{ github.event_name }}-${{ inputs.highs_ref }}
+  cancel-in-progress: true
+
+env:
+  HIGHS_REF: ${{ inputs.highs_ref || 'latest' }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  vcpkg:
+    name: vcpkg ${{ matrix.os }} ${{ matrix.feature }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        feature: [core, extras] # extras = HiPO
+    env:
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: ERGO-Code/HiGHS
+          ref: ${{ env.HIGHS_REF }}
+          path: highs
+
+      - uses: actions/checkout@v4
+        with:
+          repository: microsoft/vcpkg
+          path: vcpkg
+
+      - name: Apply the port's patches and point it at this HiGHS
+        run: python packagers/use_highs_source.py vcpkg vcpkg/ports/highs highs
+
+      - name: vcpkg install highs[${{ matrix.feature }}]
+        run: |
+          if [ "$RUNNER_OS" = Windows ]; then ./vcpkg/bootstrap-vcpkg.bat -disableMetrics; else ./vcpkg/bootstrap-vcpkg.sh -disableMetrics; fi
+          ./vcpkg/vcpkg install "highs[${{ matrix.feature }}]" || {
+            cat vcpkg/buildtrees/highs/*-err.log 2>/dev/null
+            exit 1
+          }
+
+      - name: Consumer with find_package(highs)
+        run: |
+          cmake -S hipo-consumer -B consumer -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_TOOLCHAIN_FILE="$PWD/vcpkg/scripts/buildsystems/vcpkg.cmake"
+          cmake --build consumer --config Release
+          exe=consumer/consumer
+          [ -x "$exe" ] || exe=consumer/Release/consumer.exe
+          "$exe" highs/check/instances/afiro.mps ${{ matrix.feature == 'extras' && 'hipo' || 'ipm' }}
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: vcpkg-logs-${{ matrix.os }}-${{ matrix.feature }}
+          path: vcpkg/buildtrees/highs/*.log
+
+  conda-forge:
+    name: conda-forge ${{ matrix.feedstock }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        feedstock: [highs, highspy]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: ERGO-Code/HiGHS
+          ref: ${{ env.HIGHS_REF }}
+          path: highs
+
+      - uses: actions/checkout@v4
+        with:
+          repository: conda-forge/${{ matrix.feedstock }}-feedstock
+          path: feedstock
+
+      - name: Point the recipe at this HiGHS
+        run: python packagers/use_highs_source.py conda feedstock/recipe/recipe.yaml "$PWD/highs"
+
+      - name: rattler-build (builds and runs the recipe's tests)
+        run: |
+          curl -fsSL -o rattler-build https://github.com/prefix-dev/rattler-build/releases/latest/download/rattler-build-x86_64-unknown-linux-musl
+          chmod +x rattler-build
+          # One variant, as conda-forge CI uses: the newest CPython for highspy
+          variant="$(ls feedstock/.ci_support/linux_64_*.yaml | grep -v 't\.yaml$' | sort -V | tail -1)"
+          echo "variant: $variant"
+          ./rattler-build build --recipe feedstock/recipe -m "$variant" -c conda-forge --output-dir conda-out
+
+  homebrew:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: ERGO-Code/HiGHS
+          ref: ${{ env.HIGHS_REF }}
+          path: highs
+
+      - name: Point the formula at this HiGHS
+        run: |
+          git -C highs archive --format=tar.gz --prefix=highs/ -o "$RUNNER_TEMP/highs.tar.gz" HEAD
+          curl -fsSL -o highs.rb https://raw.githubusercontent.com/Homebrew/homebrew-core/HEAD/Formula/h/highs.rb
+          python packagers/use_highs_source.py homebrew highs.rb "$RUNNER_TEMP/highs.tar.gz"
+          brew tap-new --no-git local/highs-test
+          cp highs.rb "$(brew --repository local/highs-test)/Formula/highs.rb"
+
+      - name: brew install and brew test
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+        run: |
+          brew install --build-from-source --verbose local/highs-test/highs
+          brew test --verbose local/highs-test/highs
