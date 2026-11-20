@@ -55,6 +55,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # BLAS kernels depend on the CPU, and runners differ
+      - name: CPU
+        run: |
+          cpu=$( (lscpu 2>/dev/null | sed -n 's/^Model name: *//p'; sysctl -n machdep.cpu.brand_string 2>/dev/null) | head -1)
+          echo "CPU: $cpu"; echo "CPU: $cpu" >> "$GITHUB_STEP_SUMMARY"
+
       # hipo and debug build HiPO, which needs BLAS on Linux; warnings uses gcc-14
       - name: Install BLAS and gcc-14 (Linux)
         if: runner.os == 'Linux'
@@ -84,6 +90,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # BLAS kernels depend on the CPU, and runners differ
+      - name: CPU
+        run: |
+          $cpu = (Get-CimInstance Win32_Processor | Select-Object -First 1).Name.Trim()
+          "CPU: $cpu"; "CPU: $cpu" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -97,6 +109,27 @@ jobs:
       - run: >
           ./scripts/smoke_windows.ps1 -Ref $env:HIGHS_REF -Variants ${{ matrix.variant }}
           -Work "$env:GITHUB_WORKSPACE\smoke" -Vcpkg $env:VCPKG_INSTALLATION_ROOT
+
+      # Diagnostic, never fails: HiPO on 25fv47 sometimes hands over to IPX on
+      # runners. threads=1 turns off HiPO's parallel calls into OpenBLAS, which
+      # HiGHS already runs single-threaded.
+      - name: "Diagnostic: HiPO on 25fv47, 10 runs each with threads=1 and the default"
+        if: always() && startsWith(matrix.variant, 'hipo')
+        run: |
+          $bin = Get-ChildItem -Recurse "smoke\HiGHS\build-${{ matrix.variant }}" -Filter highs.exe -ErrorAction SilentlyContinue |
+            Where-Object FullName -match "Release" | Select-Object -First 1
+          if (-not $bin) { "no highs.exe to run"; exit 0 }
+          foreach ($t in "1", "default") {
+            $opts = @("solver=hipo"); if ($t -ne "default") { $opts += "threads=$t" }
+            $opts | Set-Content hipo.opts
+            $bad = 0
+            foreach ($i in 1..10) {
+              $log = & $bin.FullName --options_file hipo.opts smoke\HiGHS\check\instances\25fv47.mps 2>&1 | Out-String
+              if ($log -match "Restarting with IPX") { $bad++ }
+            }
+            "threads=${t}: HiPO handed over to IPX in $bad of 10 runs" | Tee-Object -Append $env:GITHUB_STEP_SUMMARY
+          }
+          exit 0
 
       - uses: actions/upload-artifact@v4
         if: always()
