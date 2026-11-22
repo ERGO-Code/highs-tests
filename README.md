@@ -69,6 +69,11 @@ below, so to run one of them alone, use `gh workflow run <file> -f ...`.
   the `Highs.Native` NuGet package used from a new .NET project, and the Rust
   `highs-sys` crate with its HiGHS submodule replaced by the ref, each on Linux,
   macOS and Windows. HiGHS's CI covers HiGHS.jl and Fortran on push.
+- `.github/workflows/nuget-hipo.yml`: the published `Highs.Native` NuGet
+  (default `1.16.0-preview.1`, set with `-f version=`) used from a new .NET
+  project on Linux, macOS and Windows, x64 and arm64. With
+  `Highs.Native.Extras`, HiPO must solve an LP. Without it, `solver=hipo` must
+  be rejected and IPX must still solve the LP (`nuget-hipo/Program.cs`).
 - [or-tools-readme.md](or-tools-readme.md): commands for testing OR-Tools with
   the HiGHS GPU solver by hand (Bazel and CMake/`HIGHS_GPU_LIB`, Linux and
   Windows). Notes are in [gpu-interfaces/](gpu-interfaces/README.md).

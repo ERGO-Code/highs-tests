@@ -1,0 +1,57 @@
+name: nuget-hipo
+
+# Checks a published Highs.Native NuGet from a new .NET project on every OS and
+# architecture with a GitHub runner: with Highs.Native.Extras, HiPO solves an LP,
+# and without it, selecting HiPO is rejected while the other solvers still work.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Highs.Native and Highs.Native.Extras version on nuget.org
+        default: 1.16.0-preview.1
+  push:
+    branches: [main]
+    paths:
+      - nuget-hipo/**
+      - .github/workflows/nuget-hipo.yml
+  pull_request:
+    paths:
+      - nuget-hipo/**
+      - .github/workflows/nuget-hipo.yml
+
+concurrency:
+  group: nuget-hipo-${{ github.ref }}-${{ github.event_name }}-${{ inputs.version }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  nuget:
+    name: ${{ matrix.os }} ${{ matrix.extras }} Extras
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, macos-15-intel, windows-latest, windows-11-arm]
+        extras: [with, without]
+    env:
+      VERSION: ${{ inputs.version || '1.16.0-preview.1' }}
+      PACKAGE: ${{ matrix.extras == 'with' && 'Highs.Native.Extras' || 'Highs.Native' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: New console project using the package
+        run: |
+          mkdir "$RUNNER_TEMP/app" && cd "$RUNNER_TEMP/app"
+          dotnet new console
+          cp "$GITHUB_WORKSPACE/nuget-hipo/Program.cs" .
+          dotnet add package "$PACKAGE" -v "$VERSION"
+          dotnet run -- ${{ matrix.extras }} | tee log.txt
+          # The IPM iteration count alone would also pass with a fallback to IPX
+          if [ ${{ matrix.extras }} = with ]; then grep -q "^Running HiPO" log.txt; fi
