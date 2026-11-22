@@ -45,7 +45,7 @@ jobs:
       AFIRO_OBJECTIVE: "-464.7531428571"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Free disk space
         if: runner.os == 'Linux'

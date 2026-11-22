@@ -53,7 +53,7 @@ jobs:
     env:
       WORK: ${{ github.workspace }}/smoke
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # BLAS kernels depend on the CPU, and runners differ
       - name: CPU
@@ -73,7 +73,7 @@ jobs:
 
       - run: bash scripts/smoke_unix.sh "$HIGHS_REF" ${{ matrix.variant }}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: smoke-${{ matrix.os }}-${{ matrix.variant }}
@@ -88,7 +88,7 @@ jobs:
       matrix:
         variant: [default, hipo, hipo-shared, hipo-vcpkg-clang]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # BLAS kernels depend on the CPU, and runners differ
       - name: CPU
@@ -96,7 +96,7 @@ jobs:
           $cpu = (Get-CimInstance Win32_Processor | Select-Object -First 1).Name.Trim()
           "CPU: $cpu"; "CPU: $cpu" | Out-File -Append $env:GITHUB_STEP_SUMMARY
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -110,7 +110,7 @@ jobs:
           ./scripts/smoke_windows.ps1 -Ref $env:HIGHS_REF -Variants ${{ matrix.variant }}
           -Work "$env:GITHUB_WORKSPACE\smoke" -Vcpkg $env:VCPKG_INSTALLATION_ROOT
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: smoke-windows-${{ matrix.variant }}
@@ -120,7 +120,7 @@ jobs:
     name: alpine:edge (musl)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: ERGO-Code/HiGHS
           ref: ${{ env.HIGHS_REF }}

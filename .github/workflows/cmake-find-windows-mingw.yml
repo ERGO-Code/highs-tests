@@ -29,7 +29,7 @@ jobs:
         branch: ${{ fromJSON(inputs.highs_refs || '["master", "latest"]') }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up MinGW
         shell: pwsh
@@ -38,14 +38,14 @@ jobs:
           "C:\ProgramData\mingw64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Checkout HiGHS repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ERGO-Code/HiGHS
           ref: ${{matrix.branch}}
           path: HiGHS-${{matrix.branch}}
 
       - name: Checkout CMakeHighsFindPackage
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: galabovaa/CMakeHighsFindPackage
           ref: master
@@ -114,7 +114,7 @@ jobs:
         branch: ${{ fromJSON(inputs.highs_refs || '["master", "latest"]') }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up MSYS2 with MinGW and OpenBLAS
         id: msys2
@@ -136,14 +136,14 @@ jobs:
           "MINGW_BLAS=$blas" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Checkout HiGHS repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ERGO-Code/HiGHS
           ref: ${{matrix.branch}}
           path: HiGHS-${{matrix.branch}}
 
       - name: Checkout CMakeHighsFindPackage
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: galabovaa/CMakeHighsFindPackage
           ref: hipo

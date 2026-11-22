@@ -29,17 +29,17 @@ jobs:
         branch: ${{ fromJSON(inputs.highs_refs || '["master", "latest"]') }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Checkout HiGHS repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ERGO-Code/HiGHS
           ref: ${{matrix.branch}}
           path: HiGHS-${{matrix.branch}}
 
       - name: Checkout CMakeHighsFindPackage
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: galabovaa/CMakeHighsFindPackage
           ref: master

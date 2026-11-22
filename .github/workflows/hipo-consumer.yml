@@ -59,9 +59,9 @@ jobs:
           - { os: macos-latest, blas: system, extras: shared, libs: shared }
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: ERGO-Code/HiGHS
           ref: ${{ matrix.highs_ref }}
@@ -94,7 +94,7 @@ jobs:
           bash hipo-consumer/run.sh highs "$RUNNER_TEMP/hipo" \
             ${{ matrix.setup.blas }} ${{ matrix.setup.extras }} ${{ matrix.setup.libs }}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: logs-${{ matrix.highs_ref }}-${{ matrix.setup.os }}-${{ matrix.setup.blas }}-${{ matrix.setup.extras }}-${{ matrix.setup.libs }}

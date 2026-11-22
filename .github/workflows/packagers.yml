@@ -48,15 +48,15 @@ jobs:
     env:
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: ERGO-Code/HiGHS
           ref: ${{ env.HIGHS_REF }}
           path: highs
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: microsoft/vcpkg
           path: vcpkg
@@ -94,7 +94,7 @@ jobs:
           [ -x "$exe" ] || exe=consumer/Release/consumer.exe
           "$exe" highs/check/instances/afiro.mps ${{ matrix.feature == 'extras' && 'hipo' || 'ipm' }}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: vcpkg-logs-${{ matrix.os }}-${{ matrix.feature }}-${{ matrix.triplet }}
@@ -112,15 +112,15 @@ jobs:
           - { feedstock: highs, platform: osx_arm64, os: macos-latest, rattler: aarch64-apple-darwin }
           - { feedstock: highs, platform: win_64, os: windows-latest, rattler: x86_64-pc-windows-msvc.exe }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: ERGO-Code/HiGHS
           ref: ${{ env.HIGHS_REF }}
           path: highs
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: conda-forge/${{ matrix.feedstock }}-feedstock
           path: feedstock
@@ -142,9 +142,9 @@ jobs:
   homebrew:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: ERGO-Code/HiGHS
           ref: ${{ env.HIGHS_REF }}
@@ -176,15 +176,15 @@ jobs:
       matrix:
         cppstd: [17, 20] # 20 failed in 1.15.0
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: ERGO-Code/HiGHS
           ref: ${{ env.HIGHS_REF }}
           path: highs
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: conan-io/conan-center-index
           path: cci
@@ -225,9 +225,9 @@ jobs:
           - casadi
           - or-tools
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: ERGO-Code/HiGHS
           ref: ${{ env.HIGHS_REF }}

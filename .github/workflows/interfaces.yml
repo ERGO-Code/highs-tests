@@ -42,12 +42,12 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-2022]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: ERGO-Code/HiGHS
           ref: ${{ env.HIGHS_REF }}
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -68,7 +68,7 @@ jobs:
       FEED: ${{ github.workspace }}/nugets
       VERSION: 0.0.0-prerelease
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: ERGO-Code/HiGHS
           ref: ${{ env.HIGHS_REF }}
@@ -78,7 +78,7 @@ jobs:
           cmake -S . -B build -DCSHARP=ON -DBUILD_DOTNET=ON
           cmake --build build --config Release --parallel
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 8.0.x
 
@@ -117,13 +117,13 @@ jobs:
         shell: pwsh
         run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: rust-or/highs-sys
           path: highs-sys
 
       # This HiGHS where highs-sys expects its submodule
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: ERGO-Code/HiGHS
           ref: ${{ env.HIGHS_REF }}

@@ -27,17 +27,17 @@ jobs:
         os: [ubuntu-latest]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Checkout HiGHS repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ERGO-Code/HiGHS
           ref: ${{ inputs.highs_ref || 'latest' }}
           path: HiGHS
 
       - name: Checkout highs-unit-tests repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: galabovaa/highs-unit-tests
           ref: main
