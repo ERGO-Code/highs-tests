@@ -69,6 +69,11 @@ below, so to run one of them alone, use `gh workflow run <file> -f ...`.
   the `Highs.Native` NuGet package used from a new .NET project, and the Rust
   `highs-sys` crate with its HiGHS submodule replaced by the ref, each on Linux,
   macOS and Windows. HiGHS's CI covers HiGHS.jl and Fortran on push.
+- `.github/workflows/highsmex.yml`: the HiGHSMEX MATLAB interface
+  (`savyasachi/HiGHSMEX`, `main`) built against a static HiGHS with HiPO from
+  the ref, then its `test_callhighs` and `test_callhighs_iis`, on Linux, macOS
+  and Windows. MATLAB comes from `matlab-actions/setup-matlab`, which needs no
+  license for a public repository.
 - `.github/workflows/nuget-hipo.yml`: the published `Highs.Native` NuGet
   (default `1.16.0-preview.1`, set with `-f version=`) used from a new .NET
   project on Linux, macOS and Windows, x64 and arm64. With

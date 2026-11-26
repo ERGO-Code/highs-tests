@@ -1,0 +1,133 @@
+name: highsmex
+
+# Builds the HiGHSMEX MATLAB interface (savyasachi/HiGHSMEX) against a HiGHS
+# ref and runs its tests, on Linux, macOS and Windows. MATLAB is free on
+# GitHub-hosted runners for public repositories, so no license is needed.
+#
+# HiGHSMEX's make_highsmex.m expects a static HiGHS with HiPO beside its
+# checkout, laid out like a release archive: ../highs-<ver>-<arch>-static-apache
+on:
+  workflow_dispatch:
+    inputs:
+      highs_ref:
+        description: HiGHS ref
+        default: latest
+  # pre-release.yml calls this, and runs it weekly
+  workflow_call:
+    inputs:
+      highs_ref:
+        type: string
+        default: latest
+  push:
+    branches: [main]
+    paths: [.github/workflows/highsmex.yml]
+  pull_request:
+    paths: [.github/workflows/highsmex.yml]
+
+concurrency:
+  group: highsmex-${{ github.ref }}-${{ github.event_name }}-${{ inputs.highs_ref }}
+  cancel-in-progress: true
+
+env:
+  HIGHS_REF: ${{ inputs.highs_ref || 'latest' }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  highsmex:
+    name: HiGHSMEX (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x86_64-linux-gnu
+          - os: macos-latest
+            arch: arm-apple
+          - os: windows-latest
+            arch: x86_64-windows
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          repository: ERGO-Code/HiGHS
+          ref: ${{ env.HIGHS_REF }}
+          path: HiGHS
+
+      - uses: actions/checkout@v5
+        with:
+          repository: savyasachi/HiGHSMEX
+          path: HiGHSMEX
+
+      - name: Install dir name
+        run: |
+          v() { sed -n "s/^$1=//p" HiGHS/Version.txt | tr -d '\r'; }
+          ver="$(v HIGHS_MAJOR).$(v HIGHS_MINOR).$(v HIGHS_PATCH)"
+          echo "HIGHS_VER=$ver" >> $GITHUB_ENV
+          echo "HIGHS_PREFIX=$GITHUB_WORKSPACE/highs-$ver-${{ matrix.arch }}-static-apache" >> $GITHUB_ENV
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libopenblas-dev zlib1g-dev
+
+      # MATLAB's mex links with the DLL runtime (/MD), so OpenBLAS must too
+      - name: Install OpenBLAS (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: vcpkg install openblas[threads]:x64-windows-static-md
+
+      - name: Build and install HiGHS (Linux, macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cmake -S HiGHS -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DHIPO=ON \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DBUILD_SHARED_EXTRAS_LIB=OFF \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=13.4 \
+            -DBUILD_TESTING=OFF \
+            -DBUILD_EXAMPLES=OFF \
+            -DCMAKE_INSTALL_PREFIX="$HIGHS_PREFIX"
+          cmake --build build --parallel
+          cmake --install build
+
+      - name: Build and install HiGHS (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cmake -S HiGHS -B build `
+            -DHIPO=ON `
+            -DBUILD_SHARED_LIBS=OFF `
+            -DBUILD_SHARED_EXTRAS_LIB=OFF `
+            -DZLIB=OFF `
+            -DBUILD_TESTING=OFF `
+            -DBUILD_EXAMPLES=OFF `
+            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" `
+            -DVCPKG_TARGET_TRIPLET=x64-windows-static-md `
+            -DCMAKE_INSTALL_PREFIX="$env:HIGHS_PREFIX"
+          cmake --build build --parallel --config Release
+          cmake --install build --config Release
+          # make_highsmex links -lopenblas from the HiGHS lib dir
+          Copy-Item "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows-static-md/lib/*.lib" "$env:HIGHS_PREFIX/lib"
+
+      - run: ls -R "$HIGHS_PREFIX/lib"
+
+      - uses: matlab-actions/setup-matlab@v2
+
+      - name: Build HiGHSMEX and run its tests
+        uses: matlab-actions/run-command@v2
+        env:
+          # MATLAB bundles an older libstdc++ than the runner's GCC
+          LD_PRELOAD: ${{ runner.os == 'Linux' && '/usr/lib/x86_64-linux-gnu/libstdc++.so.6' || '' }}
+        with:
+          command: |
+            cd HiGHSMEX;
+            make_highsmex(getenv('HIGHS_VER'));
+            fprintf('HiGHS %s, HiGHSMEX %s\n', callhighs(string('ver')), verHiGHSMEX);
+            nFail = test_callhighs(); assert(nFail == 0, '%d callhighs check(s) failed', nFail);
+            nFail = test_callhighs_iis(); assert(nFail == 0, '%d callhighs_iis check(s) failed', nFail);

@@ -104,6 +104,11 @@ jobs:
     uses: ./.github/workflows/interfaces.yml
     with:
       highs_ref: ${{ needs.ref.outputs.highs_ref }}
+  highsmex:
+    needs: ref
+    uses: ./.github/workflows/highsmex.yml
+    with:
+      highs_ref: ${{ needs.ref.outputs.highs_ref }}
   smoke:
     needs: ref
     uses: ./.github/workflows/smoke.yml
