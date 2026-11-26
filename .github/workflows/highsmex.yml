@@ -117,10 +117,10 @@ jobs:
 
       - run: ls -R "$HIGHS_PREFIX/lib"
 
-      - uses: matlab-actions/setup-matlab@v2
+      - uses: matlab-actions/setup-matlab@v3
 
       - name: Build HiGHSMEX and run its tests
-        uses: matlab-actions/run-command@v2
+        uses: matlab-actions/run-command@v3
         env:
           # MATLAB bundles an older libstdc++ than the runner's GCC
           LD_PRELOAD: ${{ runner.os == 'Linux' && '/usr/lib/x86_64-linux-gnu/libstdc++.so.6' || '' }}
