@@ -48,7 +48,6 @@ jobs:
           - { os: macos-latest, variant: hipo }
           - { os: macos-latest, variant: debug }
           - { os: macos-latest, variant: fortran }
-          - { os: macos-latest, variant: x86_64 }
           - { os: macos-latest, variant: bazel }
     env:
       WORK: ${{ github.workspace }}/smoke

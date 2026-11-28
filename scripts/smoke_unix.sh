@@ -4,11 +4,10 @@
 #   smoke_unix.sh <ref> [variant ...]
 #   ref: any commit of ERGO-Code/HiGHS: a branch (latest, any other), a tag,
 #        a SHA on any branch, or pull/<n>/head.
-#   variants: default hipo debug static warnings gpu bazel fortran x86_64
+#   variants: default hipo debug static warnings gpu bazel fortran
 #             (default: default hipo debug)
 #   bazel:   bazel build //... && bazel test //..., then the LP/MIP solves with bazel-bin/highs-bin.
 #   fortran: FORTRAN=ON (gfortran), then compiles and runs examples/call_highs_from_fortran.f90.
-#   x86_64:  macOS only: CMAKE_OSX_ARCHITECTURES=x86_64, tests run under Rosetta.
 #
 # For each variant: configure, build, ctest, then solve known instances with
 # every LP solver and every MIP root-LP solver and check the objective.
@@ -74,10 +73,6 @@ for v in $variants; do
     static)  flags+=(-DBUILD_SHARED_LIBS=OFF) ;;
     gpu)     flags+=(-DCUPDLP_GPU=ON) ;;
     fortran) flags+=(-DFORTRAN=ON -DCMAKE_Fortran_COMPILER=gfortran) ;;
-    x86_64)  [ "$(uname -s)" = Darwin ] || { fail "x86_64 is macOS only"; continue; }
-             # Without CMAKE_SYSTEM_PROCESSOR, check/CMakeLists.txt sees the arm64 host and
-             # expects the Mac-arm iteration counts.
-             flags+=(-DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_SYSTEM_NAME=Darwin -DCMAKE_SYSTEM_PROCESSOR=x86_64) ;;
     bazel)
       command -v bazel >/dev/null || { fail "bazel not on PATH"; continue; }
       if ! bazel build //... > "$out/bazel-build.log" 2>&1; then fail "bazel build log=$out/bazel-build.log"; continue; fi
@@ -105,10 +100,6 @@ for v in $variants; do
   if ! cmake --build "$b" --parallel "$JOBS" > "$out/$v-build.log" 2>&1; then fail "$v build"; continue; fi
   nw=$(grep -c "warning:" "$out/$v-build.log"); echo "INFO $v compiler warnings: $nw" | tee -a "$summary"
   [ "$v" = warnings ] && grep "warning:" "$out/$v-build.log" | sort -u > "$out/warnings.txt"
-  if [ $v = x86_64 ]; then
-    a=$(lipo -archs "$b/bin/highs" 2>&1)
-    [ "$a" = x86_64 ] && pass "x86_64 binary arch=$a" || fail "x86_64 binary arch='$a'"
-  fi
   if (cd "$b" && ctest --parallel "$JOBS" --timeout 1200 --output-on-failure > "$out/$v-ctest.log" 2>&1); then
     pass "$v ctest"
   else

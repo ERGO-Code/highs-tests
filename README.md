@@ -22,7 +22,7 @@ below, so to run one of them alone, use `gh workflow run <file> -f ...`.
   flugpl with every LP solver and MIP root-LP solver, checking the objective and
   that the requested solver really ran (`scripts/smoke_unix.sh`,
   `scripts/smoke_windows.ps1`). Linux: default, hipo, debug, static, warnings
-  (gcc-14), bazel. macOS: default, hipo, debug, fortran, x86_64 (Rosetta),
+  (gcc-14), bazel. macOS: default, hipo, debug, fortran,
   bazel. Windows: default, hipo and hipo-shared (in-tree OpenBLAS by clang-cl),
   hipo-vcpkg-clang. Plus an `alpine:edge` (musl) build and ctest (HiGHS#3000).
 - `.github/workflows/release-checks.yml`: G0, every HiGHS CI run on the commit
