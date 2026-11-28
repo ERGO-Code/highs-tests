@@ -100,10 +100,22 @@ for v in $variants; do
   if ! cmake --build "$b" --parallel "$JOBS" > "$out/$v-build.log" 2>&1; then fail "$v build"; continue; fi
   nw=$(grep -c "warning:" "$out/$v-build.log"); echo "INFO $v compiler warnings: $nw" | tee -a "$summary"
   [ "$v" = warnings ] && grep "warning:" "$out/$v-build.log" | sort -u > "$out/warnings.txt"
-  if (cd "$b" && ctest --parallel "$JOBS" --timeout 1200 --output-on-failure > "$out/$v-ctest.log" 2>&1); then
+  # Under Rosetta, parallel-mip-determinism gets different iteration counts
+  # across runs. unit_tests_all is one ctest entry for every Catch2 case, so run
+  # the binary directly to exclude that one case.
+  ctest_skip=()
+  [ $v = x86_64 ] && ctest_skip=(-E '^unit_tests_all$')
+  if (cd "$b" && ctest --parallel "$JOBS" --timeout 1200 --output-on-failure "${ctest_skip[@]}" > "$out/$v-ctest.log" 2>&1); then
     pass "$v ctest"
   else
     fail "$v ctest ($(grep -c 'Failed\|\*\*\*' "$out/$v-ctest.log") failed lines)"
+  fi
+  if [ $v = x86_64 ]; then
+    if (cd "$b/check" && "../bin/unit_tests" '~parallel-mip-determinism' > "$out/$v-unit_tests.log" 2>&1); then
+      pass "$v unit_tests (without parallel-mip-determinism)"
+    else
+      fail "$v unit_tests log=$out/$v-unit_tests.log"
+    fi
   fi
   if [ $v = fortran ]; then
     # The example is not built by cmake; Highs_lpCall on its LP must report Optimal (7).
